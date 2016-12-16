@@ -1,0 +1,20 @@
+workspace:
+  base: /go
+  path: src/toroid.io/drone-plugins/drone-kicad
+
+pipeline:
+  buildgo:
+    image: golang
+    environment:
+      - CGO_ENABLED=0
+      - GOOS=linux
+      - GOARCH=amd64
+    commands:
+      - go build -ldflags "-s -w -X main.build=$DRONE_BUILD_NUMBER" -a -tags netgo
+
+  latest:
+    image: plugins/docker
+    repo: toroid/drone-kicad
+    when:
+      branch: master
+      event: push
