@@ -55,7 +55,7 @@ type (
 		//Deploy	Deploy	// Deploy configuration
 		Options Options	// Plugin options
 	}
-}
+)
 
 func (p Plugin) Exec() error {
 
@@ -89,7 +89,7 @@ func commandSchematic(pjt Project) *exec.Cmd {
 		pythonexec,
 		"-u",
 		sch_script,
-		opt.Name
+		opt.Name,
 	)
 }
 
@@ -99,7 +99,7 @@ func commandBOM(pjt Project) *exec.Cmd {
 		pythonexec,
 		"-u",
 		bom_script,
-		opt.Name
+		opt.Name,
 	)
 }
 

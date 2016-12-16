@@ -19,35 +19,35 @@ func main() {
 	app.Version = fmt.Sprintf("0.0.%s", build)
 	app.Flags = []cli.Flag{
 		cli.StringFlag{
-			Name: "client.code"
-			Usage: "enterprise client code"
-			EnvVar: "PLUGIN_CLIENT_CODE"
+			Name: "client.code",
+			Usage: "enterprise client code",
+			EnvVar: "PLUGIN_CLIENT_CODE",
 		},
 		cli.StringFlag{
-			Name: "client.name"
-			Usage: "client name"
-			EnvVar: "PLUGIN_CLIENT_NAME"
+			Name: "client.name",
+			Usage: "client name",
+			EnvVar: "PLUGIN_CLIENT_NAME",
 		},
 		cli.StringFlag{
-			Name: "project.code"
-			Usage: "enterprise project code"
-			EnvVar: "PLUGIN_PROJECT_CODE"
+			Name: "project.code",
+			Usage: "enterprise project code",
+			EnvVar: "PLUGIN_PROJECT_CODE",
 		},
 		cli.StringFlag{
-			Name: "project.name"
-			Usage: "project name"
-			EnvVar: "PLUGIN_PROJECT_NAME"
+			Name: "project.name",
+			Usage: "project name",
+			EnvVar: "PLUGIN_PROJECT_NAME",
 		},
 		cli.BoolFlag{
-			Name: "options.schematic"
-			Usage: "generate schematic"
-			EnvVar "PLUGIN_SCHEMATIC"
+			Name: "options.schematic",
+			Usage: "generate schematic",
+			EnvVar: "PLUGIN_SCHEMATIC",
 		},
 		cli.BoolFlag{
-			Name: "options.bom"
-			Usage: "generate bom"
-			EnvVar: "PLUGIN_BOM"
-		}
+			Name: "options.bom",
+			Usage: "generate bom",
+			EnvVar: "PLUGIN_BOM",
+		},
 	}
 
 	if err := app.Run(os.Args); err != nil {
@@ -59,17 +59,17 @@ func run(c *cli.Context) error {
 
 	plugin := Plugin{
 		Client: Client{
-			Code: c.String("client.code")
-			Name: c.String("client.name")
+			Code: c.String("client.code"),
+			Name: c.String("client.name"),
 		},
 		Project: Project{
-			Code: c.String("project.code")
-			Name: c.String("project.name")
+			Code: c.String("project.code"),
+			Name: c.String("project.name"),
 		},
 		Options: Options{
-			Sch: c.Bool("options.schematic")
-			Bom: c.Bool("options.bom")
-		}
+			Sch: c.Bool("options.schematic"),
+			Bom: c.Bool("options.bom"),
+		},
 	}
 	
 	return plugin.Exec()
