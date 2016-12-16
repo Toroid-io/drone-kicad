@@ -2,11 +2,9 @@ package main
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"strings"
-	"time"
 )
 
 const (
@@ -62,10 +60,10 @@ func (p Plugin) Exec() error {
 	var cmds []*exec.Cmd
 
 	if p.Options.Sch {
-		cmds = append(cmds, commandSchematic())
+		cmds = append(cmds, commandSchematic(p.Project))
 	}
 	if p.Options.Bom {
-		cmds = append(cmds, commandBOM())
+		cmds = append(cmds, commandBOM(p.Project))
 	}
 
 	// execute all commands in batch mode.
@@ -89,7 +87,7 @@ func commandSchematic(pjt Project) *exec.Cmd {
 		pythonexec,
 		"-u",
 		sch_script,
-		opt.Name,
+		pjt.Name,
 	)
 }
 
@@ -99,7 +97,7 @@ func commandBOM(pjt Project) *exec.Cmd {
 		pythonexec,
 		"-u",
 		bom_script,
-		opt.Name,
+		pjt.Name,
 	)
 }
 
