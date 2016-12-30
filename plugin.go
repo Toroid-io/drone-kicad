@@ -16,14 +16,14 @@ const (
 type (
 	// Client defines the client data to be embedded in some documents
 	Client struct {
-		Code	string	// Enterprise client code
-		Name	string	// Enterprise client name
+		Code string // Enterprise client code
+		Name string // Enterprise client name
 	}
 
 	// Project defines the KiCad project
 	Project struct {
-		Code	string // Enterprise project code
-		Name	string // Enterprise project name
+		Code string // Enterprise project code
+		Name string // Enterprise project name
 	}
 
 	/* Deploy defines where to store the generated files
@@ -36,8 +36,8 @@ type (
 
 	// Options defines what to generate
 	Options struct {
-		Sch	bool // Generate Schematic (pdf)
-		Bom	bool // Generate BOM (xml & xlsx)
+		Sch bool // Generate Schematic (pdf)
+		Bom bool // Generate BOM (xml & xlsx)
 		//Brd	bool // Generate PCB plot (pdf)
 		//Grb	bool // Generate Gerber files
 		//Lyr	bool // Generate plot for each layer (pdf)
@@ -48,10 +48,10 @@ type (
 
 	// Plugin defines the KiCad plugin parameters
 	Plugin struct {
-		Client	Client	// Client configuration
-		Project	Project	// Project configuration
+		Client  Client  // Client configuration
+		Project Project // Project configuration
 		//Deploy	Deploy	// Deploy configuration
-		Options Options	// Plugin options
+		Options Options // Plugin options
 	}
 )
 
@@ -65,6 +65,10 @@ func (p Plugin) Exec() error {
 	if p.Options.Bom {
 		cmds = append(cmds, commandBOM(p.Project))
 	}
+
+	// Set env variables
+	os.Setenv("DISPLAY", ":0")
+	os.Setenv("DEBIAN_FRONTEND", "noninteractive")
 
 	// execute all commands in batch mode.
 	for _, cmd := range cmds {
