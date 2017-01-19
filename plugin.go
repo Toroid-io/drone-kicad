@@ -11,6 +11,31 @@ const (
 	pythonexec = "python2"
 	sch_script = "/bin/ci-scripts/export_schematic.py"
 	bom_script = "/bin/ci-scripts/export_bom.py"
+	grb_script = "/bin/ci-scripts/export_grb.py"
+
+	// Binary masks - MSBits
+	badh_mask     = 1 << 0
+	fadh_mask     = 1 << 1
+	bpaste_mask   = 1 << 2
+	fpaste_mask   = 1 << 3
+	bsilks_mask   = 1 << 4
+	fsilks_mask   = 1 << 5
+	bmask_mask    = 1 << 6
+	fmask_mask    = 1 << 7
+	dwguser_mask  = 1 << 8
+	cmtsuser_mask = 1 << 9
+	eco1_mask     = 1 << 10
+	eco2_mask     = 1 << 11
+	ecuts_mask    = 1 << 12
+	margin_mask   = 1 << 13
+	bcrtyd_mask   = 1 << 14
+	fcrtyd_mask   = 1 << 15
+	bfab_mask     = 1 << 16
+	ffab_mask     = 1 << 17
+
+	// Binary masks - LSBits
+	fcu_mask = 1 << 3
+	bcu_mask = 1 << 31
 )
 
 type (
@@ -26,20 +51,24 @@ type (
 		Name string // Enterprise project name
 	}
 
-	/* Deploy defines where to store the generated files
-	Deploy struct {
-		Url	string // Deploy folder URL
-		User	string // Deploy server username
-		Pass	string // Deploy server password
+	// Gerber defines the options for exporting Gerber files
+	GerberLayers struct {
+		fcu bool `json:"fcu"`
+		bcu bool `json:"bcu"`
+		fm  bool `json:"fm"`
+		bm  bool `json:"bm"`
+		fs  bool `json:"fs"`
+		bs  bool `json:"bs"`
+		ec  bool `json:"ec"`
 	}
-	*/
 
 	// Options defines what to generate
 	Options struct {
 		Sch bool // Generate Schematic (pdf)
 		Bom bool // Generate BOM (xml & xlsx)
 		//Brd	bool // Generate PCB plot (pdf)
-		//Grb	bool // Generate Gerber files
+		Grb    GerberLayers // Gerber file layers
+		GrbGen bool         // Generate Gerber files
 		//Lyr	bool // Generate plot for each layer (pdf)
 		//Wrl	bool // Generate VRML PCB
 		//Stp	bool // Generate Step PCB
@@ -50,7 +79,6 @@ type (
 	Plugin struct {
 		Client  Client  // Client configuration
 		Project Project // Project configuration
-		//Deploy	Deploy	// Deploy configuration
 		Options Options // Plugin options
 	}
 )
@@ -64,6 +92,10 @@ func (p Plugin) Exec() error {
 	}
 	if p.Options.Bom {
 		cmds = append(cmds, commandBOM(p.Project))
+	}
+	if p.Options.GrbGen {
+		cmds = append(cmds, commandSetGerberLayers(p.Project, p.Options.Grb))
+		cmds = append(cmds, commandGerber(p.Project))
 	}
 
 	// Set env variables
@@ -83,6 +115,53 @@ func (p Plugin) Exec() error {
 	}
 
 	return nil
+}
+
+func commandSetGerberLayers(pjt Project, lyr GerberLayers) *exec.Cmd {
+
+	var layerselection_str string
+	var lyr_lsb uint32 = 0
+	var lyr_msb uint32 = 0
+	if lyr.fcu {
+		lyr_lsb |= fcu_mask
+	}
+	if lyr.bcu {
+		lyr_lsb |= bcu_mask
+	}
+	if lyr.fs {
+		lyr_msb |= fsilks_mask
+	}
+	if lyr.bs {
+		lyr_msb |= bsilks_mask
+	}
+	if lyr.fm {
+		lyr_msb |= fmask_mask
+	}
+	if lyr.bm {
+		lyr_msb |= bmask_mask
+	}
+
+	layerselection_str = fmt.Sprintf("%#x_%x", lyr_msb, lyr_lsb)
+
+	var sed_cmd string
+	sed_cmd = fmt.Sprintf("%s %s%s", "'s/\\([\\s\\t]*layerselection\\).*$/\\1", layerselection_str, ")/'")
+
+	return exec.Command(
+		"sed",
+		"-i",
+		sed_cmd,
+		pjt.Name,
+	)
+}
+
+func commandGerber(pjt Project) *exec.Cmd {
+
+	return exec.Command(
+		pythonexec,
+		"-u",
+		grb_script,
+		pjt.Name,
+	)
 }
 
 func commandSchematic(pjt Project) *exec.Cmd {
