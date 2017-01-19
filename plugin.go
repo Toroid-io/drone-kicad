@@ -53,13 +53,13 @@ type (
 
 	// Gerber defines the options for exporting Gerber files
 	GerberLayers struct {
-		fcu bool `json:"fcu"`
-		bcu bool `json:"bcu"`
-		fm  bool `json:"fm"`
-		bm  bool `json:"bm"`
-		fs  bool `json:"fs"`
-		bs  bool `json:"bs"`
-		ec  bool `json:"ec"`
+		Fcu bool `json:"fcu"`
+		Bcu bool `json:"bcu"`
+		Fm  bool `json:"fm"`
+		Bm  bool `json:"bm"`
+		Fs  bool `json:"fs"`
+		Bs  bool `json:"bs"`
+		Ec  bool `json:"ec"`
 	}
 
 	// Options defines what to generate
@@ -122,35 +122,38 @@ func commandSetGerberLayers(pjt Project, lyr GerberLayers) *exec.Cmd {
 	var layerselection_str string
 	var lyr_lsb uint32 = 0
 	var lyr_msb uint32 = 0
-	if lyr.fcu {
+	if lyr.Fcu {
 		lyr_lsb |= fcu_mask
 	}
-	if lyr.bcu {
+	if lyr.Bcu {
 		lyr_lsb |= bcu_mask
 	}
-	if lyr.fs {
+	if lyr.Fs {
 		lyr_msb |= fsilks_mask
 	}
-	if lyr.bs {
+	if lyr.Bs {
 		lyr_msb |= bsilks_mask
 	}
-	if lyr.fm {
+	if lyr.Fm {
 		lyr_msb |= fmask_mask
 	}
-	if lyr.bm {
+	if lyr.Bm {
 		lyr_msb |= bmask_mask
 	}
 
-	layerselection_str = fmt.Sprintf("%#x_%x", lyr_msb, lyr_lsb)
+	layerselection_str = fmt.Sprintf("%#08x_%08x", lyr_msb, lyr_lsb)
 
 	var sed_cmd string
-	sed_cmd = fmt.Sprintf("%s %s%s", "'s/\\([\\s\\t]*layerselection\\).*$/\\1", layerselection_str, ")/'")
+	sed_cmd = fmt.Sprintf("%s %s%s", "s/\\([\\s\\t]*layerselection\\).*$/\\1", layerselection_str, ")/")
+
+	var brd_name string
+	brd_name = fmt.Sprintf("%s.kicad_pcb", pjt.Name)
 
 	return exec.Command(
 		"sed",
 		"-i",
 		sed_cmd,
-		pjt.Name,
+		brd_name,
 	)
 }
 

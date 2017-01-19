@@ -73,9 +73,8 @@ func run(c *cli.Context) error {
 			Name: c.String("project.name"),
 		},
 		Options: Options{
-			Sch: c.Bool("options.schematic"),
-			Bom: c.Bool("options.bom"),
-			//Grb:    nil,
+			Sch:    c.Bool("options.schematic"),
+			Bom:    c.Bool("options.bom"),
 			GrbGen: c.IsSet("options.gerber"),
 		},
 	}
