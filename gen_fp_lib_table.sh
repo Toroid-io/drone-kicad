@@ -1,4 +1,4 @@
-#/bin/bash
+#!/bin/bash
 
 TABLE_DIR=/root/.config/kicad
 TABLE=$TABLE_DIR/fp-lib-table
