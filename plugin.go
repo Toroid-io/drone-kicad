@@ -8,10 +8,11 @@ import (
 )
 
 const (
-	pythonexec = "python2"
-	sch_script = "/bin/ci-scripts/export_schematic.py"
-	bom_script = "/bin/ci-scripts/export_bom.py"
-	grb_script = "/bin/ci-scripts/export_grb.py"
+	pythonexec       = "python2"
+	sch_script       = "/bin/ci-scripts/export_schematic.py"
+	bom_script       = "/bin/ci-scripts/export_bom.py"
+	grb_script       = "/bin/ci-scripts/export_grb.py"
+	fplibtablescript = "gen_fp_lib_table.sh"
 
 	// Binary masks - MSBits
 	badh_mask     = 1 << 0
@@ -94,6 +95,7 @@ func (p Plugin) Exec() error {
 		cmds = append(cmds, commandBOM(p.Project))
 	}
 	if p.Options.GrbGen {
+		cmds = append(cmds, commandGenFpLibTable())
 		cmds = append(cmds, commandSetGerberLayers(p.Project, p.Options.Grb))
 		cmds = append(cmds, commandGerber(p.Project))
 	}
@@ -115,6 +117,13 @@ func (p Plugin) Exec() error {
 	}
 
 	return nil
+}
+
+func commandGenFpLibTable() *exec.Cmd {
+
+	return exec.Command(
+		fplibtablescript,
+	)
 }
 
 func commandSetGerberLayers(pjt Project, lyr GerberLayers) *exec.Cmd {
