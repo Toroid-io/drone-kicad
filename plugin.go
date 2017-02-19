@@ -75,10 +75,6 @@ func (p Plugin) Exec() error {
 		cmds = append(cmds, commandGerber(p.Project, p.Options.Grb))
 	}
 
-	// Set env variables
-	os.Setenv("DISPLAY", ":0")
-	os.Setenv("DEBIAN_FRONTEND", "noninteractive")
-
 	// execute all commands in batch mode.
 	for _, cmd := range cmds {
 		cmd.Stdout = os.Stdout
@@ -142,22 +138,34 @@ func commandGerber(pjt Project, lyr GerberLayers) *exec.Cmd {
 
 func commandSchematic(pjt Project) *exec.Cmd {
 
-	return exec.Command(
+	var c = exec.Command(
 		pythonexec,
 		"-u",
 		sch_script,
 		pjt.Name,
 	)
+
+	c.Env = os.Environ()
+	c.Env = append(c.Env, "DEBIAN_FRONTEND=noninteractive")
+	c.Env = append(c.Env, "DISPLAY=:0")
+
+	return c
 }
 
 func commandBOM(pjt Project) *exec.Cmd {
 
-	return exec.Command(
+	var c = exec.Command(
 		pythonexec,
 		"-u",
 		bom_script,
 		pjt.Name,
 	)
+
+	c.Env = os.Environ()
+	c.Env = append(c.Env, "DEBIAN_FRONTEND=noninteractive")
+	c.Env = append(c.Env, "DISPLAY=:0")
+
+	return c
 }
 
 // trace writes each command to stdout with the command wrapped in an xml
