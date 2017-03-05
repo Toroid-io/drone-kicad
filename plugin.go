@@ -39,6 +39,7 @@ type (
 		Bsilks   bool `json:"bsilks"`
 		Edgecuts bool `json:"edgecuts"`
 		Drl      bool `json:"drl"`
+		Splitth  bool `json:"splitth"`
 	}
 
 	// Options defines what to generate
@@ -99,6 +100,9 @@ func commandGerber(pjt Project, lyr GerberLayers) *exec.Cmd {
 	options = append(options, "--brd", pjt.Name)
 	options = append(options, "--dir", "CI-BUILD/GBR")
 
+	if lyr.Splitth {
+		options = append(options, "--splitth")
+	}
 	if lyr.Protel {
 		options = append(options, "--protel")
 	}
