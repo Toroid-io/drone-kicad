@@ -38,6 +38,7 @@ type (
 		Fsilks   bool `json:"fsilks"`
 		Bsilks   bool `json:"bsilks"`
 		Edgecuts bool `json:"edgecuts"`
+		Drl      bool `json:"drl"`
 	}
 
 	// Options defines what to generate
@@ -128,6 +129,9 @@ func commandGerber(pjt Project, lyr GerberLayers) *exec.Cmd {
 	}
 	if lyr.Edgecuts {
 		options = append(options, "--gko")
+	}
+	if lyr.Drl {
+		options = append(options, "--drl")
 	}
 
 	return exec.Command(
