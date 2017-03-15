@@ -29,15 +29,15 @@ func main() {
 			Usage:  "client name",
 			EnvVar: "PLUGIN_CLIENT_NAME",
 		},
-		cli.StringFlag{
-			Name:   "project.code",
-			Usage:  "enterprise project code",
-			EnvVar: "PLUGIN_PROJECT_CODE",
+		cli.StringSliceFlag{
+			Name:   "project.codes",
+			Usage:  "enterprise project Codes",
+			EnvVar: "PLUGIN_PROJECTS_CODES",
 		},
-		cli.StringFlag{
-			Name:   "project.name",
-			Usage:  "project name",
-			EnvVar: "PLUGIN_PROJECT_NAME",
+		cli.StringSliceFlag{
+			Name:   "projects.names",
+			Usage:  "project names",
+			EnvVar: "PLUGIN_PROJECTS_NAMES",
 		},
 		cli.BoolFlag{
 			Name:   "options.schematic",
@@ -68,9 +68,9 @@ func run(c *cli.Context) error {
 			Code: c.String("client.code"),
 			Name: c.String("client.name"),
 		},
-		Project: Project{
-			Code: c.String("project.code"),
-			Name: c.String("project.name"),
+		Projects: Projects{
+			Codes: c.StringSlice("projects.codes"),
+			Names: c.StringSlice("projects.names"),
 		},
 		Options: Options{
 			Sch:    c.Bool("options.schematic"),

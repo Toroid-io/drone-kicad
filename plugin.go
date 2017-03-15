@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"path"
 	"strings"
 )
 
@@ -21,10 +22,10 @@ type (
 		Name string // Enterprise client name
 	}
 
-	// Project defines the KiCad project
-	Project struct {
-		Code string // Enterprise project code
-		Name string // Enterprise project name
+	// Projects defines the KiCad projects
+	Projects struct {
+		Codes []string // Enterprise project code
+		Names []string // Enterprise project name
 	}
 
 	// Gerber defines the options for exporting Gerber files
@@ -57,9 +58,9 @@ type (
 
 	// Plugin defines the KiCad plugin parameters
 	Plugin struct {
-		Client  Client  // Client configuration
-		Project Project // Project configuration
-		Options Options // Plugin options
+		Client   Client   // Client configuration
+		Projects Projects // Projects configuration
+		Options  Options  // Plugin options
 	}
 )
 
@@ -68,13 +69,19 @@ func (p Plugin) Exec() error {
 	var cmds []*exec.Cmd
 
 	if p.Options.Sch {
-		cmds = append(cmds, commandSchematic(p.Project))
+		for _, pjtname := range p.Projects.Names {
+			cmds = append(cmds, commandSchematic(pjtname))
+		}
 	}
 	if p.Options.Bom {
-		cmds = append(cmds, commandBOM(p.Project))
+		for _, pjtname := range p.Projects.Names {
+			cmds = append(cmds, commandBOM(pjtname))
+		}
 	}
 	if p.Options.GrbGen {
-		cmds = append(cmds, commandGerber(p.Project, p.Options.Grb))
+		for _, pjtname := range p.Projects.Names {
+			cmds = append(cmds, commandGerber(pjtname, p.Options.Grb))
+		}
 	}
 
 	// execute all commands in batch mode.
@@ -92,13 +99,16 @@ func (p Plugin) Exec() error {
 	return nil
 }
 
-func commandGerber(pjt Project, lyr GerberLayers) *exec.Cmd {
+func commandGerber(pjtname string, lyr GerberLayers) *exec.Cmd {
 
 	var options []string
 
 	options = append(options, "-u", grb_script)
-	options = append(options, "--brd", pjt.Name)
-	options = append(options, "--dir", "CI-BUILD/GBR")
+	options = append(options, "--brd", pjtname)
+
+	var dir []string
+	dir = append(dir, "CI-BUILD/", path.Base(pjtname), "/GBR")
+	options = append(options, "--dir", strings.Join(dir, ""))
 
 	if lyr.Splitth {
 		options = append(options, "--splitth")
@@ -144,13 +154,13 @@ func commandGerber(pjt Project, lyr GerberLayers) *exec.Cmd {
 	)
 }
 
-func commandSchematic(pjt Project) *exec.Cmd {
+func commandSchematic(pjtname string) *exec.Cmd {
 
 	var c = exec.Command(
 		pythonexec,
 		"-u",
 		sch_script,
-		pjt.Name,
+		pjtname,
 	)
 
 	c.Env = os.Environ()
@@ -160,13 +170,13 @@ func commandSchematic(pjt Project) *exec.Cmd {
 	return c
 }
 
-func commandBOM(pjt Project) *exec.Cmd {
+func commandBOM(pjtname string) *exec.Cmd {
 
 	var c = exec.Command(
 		pythonexec,
 		"-u",
 		bom_script,
-		pjt.Name,
+		pjtname,
 	)
 
 	c.Env = os.Environ()
