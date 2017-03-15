@@ -1,6 +1,6 @@
 ## drone-kicad
 
-`drone-kicad` is a [drone](github.com/drone/drone) plugin for generating KiCad EDA output files.
+`drone-kicad` is a [drone](https://github.com/drone/drone) plugin for generating KiCad EDA output files.
 
 ## Options
 
