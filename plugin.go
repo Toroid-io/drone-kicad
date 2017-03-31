@@ -142,7 +142,7 @@ func commandClone(depurl string, deptype int, basedir string) *exec.Cmd {
 	} else if deptype == DEP_TYPE_PRETTY {
 		basedir = path.Join(basedir, "footprints")
 	} else if deptype == DEP_TYPE_3D {
-		basedir = path.Join(basedir, "packages3d")
+		basedir = path.Join(basedir, "modules/packages3d")
 	} else if deptype == DEP_TYPE_TEMPLATE {
 		basedir = path.Join(basedir, "template")
 	}

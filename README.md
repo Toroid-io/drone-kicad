@@ -13,6 +13,11 @@
     - `drl` : Print drill file
     - `splitth` : Print PTH and NPTH to different files. Defaul behavior is to merge them (assuming no NPTH is present).
     - `protel` : Use Protel extensions. If no set, files will have a suffix of the form `-LayerName`, e.g.: `project-F.Cu.gbr`
+- `deps_dir`: Base directory for dependencies. Defaults to `/usr/share/kicad`.
+- `library`: Collection of extra libraries used by the project. They are cloned into `deps_dir/library`.
+- `pretty`: Collection of extra footprints used by the project. They are cloned into `deps_dir/footprints`.
+- `3d`: Collection of extra 3D models used by the project. They are cloned into `deps_dir/modules/packages3d`.
+- `template`: Collection of extra templates used by the project. They are cloned into `deps_dir/template`.
 
 ## Example configuration
 
@@ -24,6 +29,8 @@ pipeline:
       - Project1/Project1_BaseName
       - Project2/Project2_BaseName
     schematic: true
+    deps_dir: "/opt/kicad"
+    library: https://git.server.com/username/awesome-kicad-library
     bom: true
     gerber:
       all: true
