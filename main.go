@@ -54,6 +54,31 @@ func main() {
 			Usage:  "generate gerber files",
 			EnvVar: "PLUGIN_GERBER",
 		},
+		cli.StringSliceFlag{
+			Name:   "deps.libs",
+			Usage:  "Download dependencies",
+			EnvVar: "PLUGIN_LIBRARY",
+		},
+		cli.StringSliceFlag{
+			Name:   "deps.pretty",
+			Usage:  "Download footprints",
+			EnvVar: "PLUGIN_PRETTY",
+		},
+		cli.StringSliceFlag{
+			Name:   "deps.3d",
+			Usage:  "Download 3d Models",
+			EnvVar: "PLUGIN_3D",
+		},
+		cli.StringSliceFlag{
+			Name:   "deps.template",
+			Usage:  "Download templates",
+			EnvVar: "PLUGIN_TEMPLATE",
+		},
+		cli.StringFlag{
+			Name:   "deps.basedir",
+			Usage:  "Base directory for dependencies",
+			EnvVar: "PLUGIN_DEPS_DIR",
+		},
 	}
 
 	if err := app.Run(os.Args); err != nil {
@@ -76,6 +101,13 @@ func run(c *cli.Context) error {
 			Sch:    c.Bool("options.schematic"),
 			Bom:    c.Bool("options.bom"),
 			GrbGen: c.IsSet("options.gerber"),
+		},
+		Dependencies: Dependencies{
+			Libraries:  c.StringSlice("deps.libs"),
+			Footprints: c.StringSlice("deps.pretty"),
+			Modules3d:  c.StringSlice("deps.3d"),
+			Basedir:    c.String("deps.basedir"),
+			Templates:  c.StringSlice("deps.template"),
 		},
 	}
 

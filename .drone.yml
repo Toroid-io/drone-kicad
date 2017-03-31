@@ -12,9 +12,15 @@ pipeline:
     commands:
       - go build -ldflags "-s -w -X main.build=$DRONE_BUILD_NUMBER" -a -tags netgo
 
+  scipts:
+    image: bravissimolabs/alpine-git
+    commands:
+      - git clone https://git.toroid.io/KiCad/ci-scripts.git
+
   latest:
     image: plugins/docker
     repo: toroid/drone-kicad
+    tags: [latest, 0.2]
     when:
       branch: master
       event: push

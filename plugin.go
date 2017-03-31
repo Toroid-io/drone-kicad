@@ -15,6 +15,13 @@ const (
 	grb_script = "/bin/ci-scripts/export_grb.py"
 )
 
+const (
+	DEP_TYPE_LIB      = iota
+	DEP_TYPE_PRETTY   = iota
+	DEP_TYPE_3D       = iota
+	DEP_TYPE_TEMPLATE = iota
+)
+
 type (
 	// Client defines the client data to be embedded in some documents
 	Client struct {
@@ -56,17 +63,46 @@ type (
 		//3d	bool // Generate plot of 3D view (png)
 	}
 
+	Dependencies struct {
+		Libraries  []string // External libraries
+		Footprints []string // External footprints
+		Modules3d  []string // External 3D models
+		Basedir    string   // Base directory
+		Templates  []string // External templates
+	}
+
 	// Plugin defines the KiCad plugin parameters
 	Plugin struct {
-		Client   Client   // Client configuration
-		Projects Projects // Projects configuration
-		Options  Options  // Plugin options
+		Client       Client       // Client configuration
+		Projects     Projects     // Projects configuration
+		Options      Options      // Plugin options
+		Dependencies Dependencies // Projects dependencies
 	}
 )
 
 func (p Plugin) Exec() error {
 
 	var cmds []*exec.Cmd
+
+	if p.Dependencies.Basedir == "" {
+		p.Dependencies.Basedir = "/usr/share/kicad"
+	}
+
+	for _, dep := range p.Dependencies.Libraries {
+		cmds = append(cmds, commandClone(dep, DEP_TYPE_LIB, p.Dependencies.Basedir))
+	}
+
+	for _, dep := range p.Dependencies.Footprints {
+		cmds = append(cmds, commandClone(dep, DEP_TYPE_PRETTY, p.Dependencies.Basedir))
+	}
+
+	for _, dep := range p.Dependencies.Modules3d {
+		cmds = append(cmds, commandClone(dep, DEP_TYPE_3D, p.Dependencies.Basedir))
+	}
+
+	for _, dep := range p.Dependencies.Templates {
+		cmds = append(cmds, commandClone(dep, DEP_TYPE_TEMPLATE, p.Dependencies.Basedir))
+	}
 
 	if p.Options.Sch {
 		for _, pjtname := range p.Projects.Names {
@@ -97,6 +133,33 @@ func (p Plugin) Exec() error {
 	}
 
 	return nil
+}
+
+func commandClone(depurl string, deptype int, basedir string) *exec.Cmd {
+
+	if deptype == DEP_TYPE_LIB {
+		basedir = path.Join(basedir, "library")
+	} else if deptype == DEP_TYPE_PRETTY {
+		basedir = path.Join(basedir, "footprints")
+	} else if deptype == DEP_TYPE_3D {
+		basedir = path.Join(basedir, "packages3d")
+	} else if deptype == DEP_TYPE_TEMPLATE {
+		basedir = path.Join(basedir, "template")
+	}
+
+	err := os.MkdirAll(basedir, 0777)
+	if err != nil {
+		fmt.Println("Directory couldn't be created!")
+	}
+
+	var cmd []string
+	cmd = append(cmd, "cd", basedir, "&&", "git clone", depurl)
+
+	return exec.Command(
+		"/bin/sh",
+		"-c",
+		strings.Join(cmd, " "),
+	)
 }
 
 func commandGerber(pjtname string, lyr GerberLayers) *exec.Cmd {
