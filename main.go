@@ -79,6 +79,21 @@ func main() {
 			Usage:  "Base directory for dependencies",
 			EnvVar: "PLUGIN_DEPS_DIR",
 		},
+		cli.StringFlag{
+			Name:   "netrc.machine",
+			Usage:  "netrc machine",
+			EnvVar: "DRONE_NETRC_MACHINE",
+		},
+		cli.StringFlag{
+			Name:   "netrc.username",
+			Usage:  "netrc username",
+			EnvVar: "DRONE_NETRC_USERNAME",
+		},
+		cli.StringFlag{
+			Name:   "netrc.password",
+			Usage:  "netrc password",
+			EnvVar: "DRONE_NETRC_PASSWORD",
+		},
 	}
 
 	if err := app.Run(os.Args); err != nil {
@@ -108,6 +123,11 @@ func run(c *cli.Context) error {
 			Modules3d:  c.StringSlice("deps.3d"),
 			Basedir:    c.String("deps.basedir"),
 			Templates:  c.StringSlice("deps.template"),
+		},
+		Netrc: Netrc{
+			Login:    c.String("netrc.username"),
+			Machine:  c.String("netrc.machine"),
+			Password: c.String("netrc.password"),
 		},
 	}
 

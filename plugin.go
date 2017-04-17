@@ -2,9 +2,12 @@ package main
 
 import (
 	"fmt"
+	"io/ioutil"
 	"os"
 	"os/exec"
+	"os/user"
 	"path"
+	"path/filepath"
 	"strings"
 )
 
@@ -33,6 +36,12 @@ type (
 	Projects struct {
 		Codes []string // Enterprise project code
 		Names []string // Enterprise project name
+	}
+
+	Netrc struct {
+		Machine  string
+		Login    string
+		Password string
 	}
 
 	// Gerber defines the options for exporting Gerber files
@@ -77,10 +86,16 @@ type (
 		Projects     Projects     // Projects configuration
 		Options      Options      // Plugin options
 		Dependencies Dependencies // Projects dependencies
+		Netrc        Netrc        // Authentication
 	}
 )
 
 func (p Plugin) Exec() error {
+
+	err := writeNetrc(p.Netrc.Machine, p.Netrc.Login, p.Netrc.Password)
+	if err != nil {
+		return err
+	}
 
 	var cmds []*exec.Cmd
 
@@ -254,3 +269,30 @@ func commandBOM(pjtname string) *exec.Cmd {
 func trace(cmd *exec.Cmd) {
 	fmt.Fprintf(os.Stdout, "+ %s\n", strings.Join(cmd.Args, " "))
 }
+
+// helper function to write a netrc file. [From drone-git]
+func writeNetrc(machine, login, password string) error {
+	if machine == "" {
+		return nil
+	}
+	out := fmt.Sprintf(
+		netrcFile,
+		machine,
+		login,
+		password,
+	)
+
+	home := "/root"
+	u, err := user.Current()
+	if err == nil {
+		home = u.HomeDir
+	}
+	path := filepath.Join(home, ".netrc")
+	return ioutil.WriteFile(path, []byte(out), 0600)
+}
+
+const netrcFile = `
+machine %s
+login %s
+password %s
+`
