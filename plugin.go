@@ -153,7 +153,7 @@ func commandClone(depurl string, deptype int, basedir string) *exec.Cmd {
 	}
 
 	var cmd []string
-	cmd = append(cmd, "cd", basedir, "&&", "git clone", depurl)
+	cmd = append(cmd, "cd", basedir, "&&", "git", "clone", depurl)
 
 	return exec.Command(
 		"/bin/sh",
