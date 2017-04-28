@@ -21,7 +21,7 @@ pipeline:
   latest:
     image: plugins/docker
     repo: toroid/drone-kicad
-    tags: [latest, 0.2]
+    tags: [latest, 0.3]
     when:
       branch: master
       event: push
