@@ -12,10 +12,13 @@ import (
 )
 
 const (
-	pythonexec = "python2"
-	sch_script = "/bin/ci-scripts/export_schematic.py"
-	bom_script = "/bin/ci-scripts/export_bom.py"
-	grb_script = "/bin/ci-scripts/export_grb.py"
+	pythonexec    = "python2"
+	sch_script    = "/bin/ci-scripts/export_schematic.py"
+	bom_script    = "/bin/ci-scripts/export_bom.py"
+	grb_script    = "/bin/ci-scripts/export_grb.py"
+	svg_script    = "/bin/PcbDraw/pcbdraw.py"
+	style_dir     = "/bin/PcbDraw/styles"
+	default_style = "gatema-green"
 )
 
 const (
@@ -23,6 +26,7 @@ const (
 	DEP_TYPE_PRETTY   = iota
 	DEP_TYPE_3D       = iota
 	DEP_TYPE_TEMPLATE = iota
+	DEP_TYPE_SVG      = iota
 )
 
 type (
@@ -61,11 +65,13 @@ type (
 
 	// Options defines what to generate
 	Options struct {
-		Sch bool // Generate Schematic (pdf)
-		Bom bool // Generate BOM (xml & xlsx)
+		Sch        bool         // Generate Schematic (pdf)
+		Bom        bool         // Generate BOM (xml & xlsx)
+		Grb        GerberLayers // Gerber file layers
+		GrbGen     bool         // Generate Gerber files
+		SvgLibDirs []string     // SVG lib folder to pass to the svg generator
+		Svg        bool         // Generate SVG output
 		//Brd	bool // Generate PCB plot (pdf)
-		Grb    GerberLayers // Gerber file layers
-		GrbGen bool         // Generate Gerber files
 		//Lyr	bool // Generate plot for each layer (pdf)
 		//Wrl	bool // Generate VRML PCB
 		//Stp	bool // Generate Step PCB
@@ -78,6 +84,7 @@ type (
 		Modules3d  []string // External 3D models
 		Basedir    string   // Base directory
 		Templates  []string // External templates
+		SvgLibs    []string // External SVG models
 	}
 
 	// Plugin defines the KiCad plugin parameters
@@ -119,6 +126,10 @@ func (p Plugin) Exec() error {
 		cmds = append(cmds, commandClone(dep, DEP_TYPE_TEMPLATE, p.Dependencies.Basedir))
 	}
 
+	for _, dep := range p.Dependencies.SvgLibs {
+		cmds = append(cmds, commandClone(dep, DEP_TYPE_SVG, p.Dependencies.Basedir))
+	}
+
 	if p.Options.Sch {
 		for _, pjtname := range p.Projects.Names {
 			cmds = append(cmds, commandSchematic(pjtname))
@@ -132,6 +143,19 @@ func (p Plugin) Exec() error {
 	if p.Options.GrbGen {
 		for _, pjtname := range p.Projects.Names {
 			cmds = append(cmds, commandGerber(pjtname, p.Options.Grb))
+		}
+	}
+
+	var svg_lib_dirs []string
+	if len(p.Options.SvgLibDirs) > 0 {
+		for _, lib := range p.Options.SvgLibDirs {
+			svg_lib_dirs = append(svg_lib_dirs, path.Join(p.Dependencies.Basedir, "svg-lib", lib))
+		}
+	}
+
+	if p.Options.Svg {
+		for _, pjtname := range p.Projects.Names {
+			cmds = append(cmds, commandSVG(pjtname, svg_lib_dirs))
 		}
 	}
 
@@ -150,6 +174,35 @@ func (p Plugin) Exec() error {
 	return nil
 }
 
+func commandSVG(pjtname string, svg_lib_dirs []string) *exec.Cmd {
+
+	var style []string
+	style = append(style, default_style, ".json")
+
+	var output []string
+	output = append(output, "CI-BUILD/", path.Base(pjtname), "/SVG/", path.Base(pjtname), ".svg")
+
+	err := os.MkdirAll(path.Dir(strings.Join(output, "")), 0777)
+	if err != nil {
+		fmt.Println("Directory couldn't be created!")
+	}
+
+	var board []string
+	board = append(board, pjtname, ".kicad_pcb")
+
+	var c = exec.Command(
+		pythonexec,
+		"-u",
+		svg_script,
+		path.Join(style_dir, strings.Join(style, "")),
+		strings.Join(svg_lib_dirs, ","),
+		strings.Join(output, ""),
+		strings.Join(board, ""),
+	)
+
+	return c
+}
+
 func commandClone(depurl string, deptype int, basedir string) *exec.Cmd {
 
 	if deptype == DEP_TYPE_LIB {
@@ -160,6 +213,8 @@ func commandClone(depurl string, deptype int, basedir string) *exec.Cmd {
 		basedir = path.Join(basedir, "modules/packages3d")
 	} else if deptype == DEP_TYPE_TEMPLATE {
 		basedir = path.Join(basedir, "template")
+	} else if deptype == DEP_TYPE_SVG {
+		basedir = path.Join(basedir, "svg-lib")
 	}
 
 	err := os.MkdirAll(basedir, 0777)
