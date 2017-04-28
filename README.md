@@ -18,6 +18,9 @@
 - `pretty`: Collection of extra footprints used by the project. They are cloned into `deps_dir/footprints`.
 - `3d`: Collection of extra 3D models used by the project. They are cloned into `deps_dir/modules/packages3d`.
 - `template`: Collection of extra templates used by the project. They are cloned into `deps_dir/template`.
+- `svg`: `true|false`. Enables the generation of SVG output.
+- `svg_lib`: Collection of svg footprint repos used for svg output generation.
+- `svg_lib_dirs`: Paths where to look for svg footprints.
 
 ## Example configuration
 
@@ -36,7 +39,15 @@ pipeline:
       all: true
       protel: true
       splitth: true
+    svg: true
+    svg_lib:
+      - https://git.server.com/username/awesome-svg-library
+      - https://git.server.com/username/awesome-svg-library-2
+    svg_lib_dirs:
+      - awesome-svg-library/Version1
 ```
+
+In this example, `awesome-svg-library` may contain footprints under `Old/Version2` directory and `awesome-svg-library-2` may contain footprints under the root directory.
 
 ## Output
 
@@ -58,9 +69,11 @@ CI-BUILD
 │   │   ├── Project1_BaseName.gts
 │   │   ├── Project1_BaseName-NPTH.drl
 │   │   └── Project1_BaseName-PTH.drl
-│   └── SCH
-│       ├── export_schematic_screencast.ogv
-│       └── Project1_BaseName.pdf
+│   ├── SCH
+│   │   ├── export_schematic_screencast.ogv
+│   │   └── Project1_BaseName.pdf
+│   └── SVG
+│       └── Project1_BaseName.svg
 └── Project2_BaseName
     ├── BOM
     │   ├── export_bom_screencast.ogv
@@ -75,9 +88,11 @@ CI-BUILD
     │   ├── Project2_BaseName.gts
     │   ├── Project2_BaseName-NPTH.drl
     │   └── Project2_BaseName-PTH.drl
-    └── SCH
-        ├── export_schematic_screencast.ogv
-        └── Project2_BaseName.pdf
+    ├── SCH
+    │   ├── export_schematic_screencast.ogv
+    │   └── Project2_BaseName.pdf
+    └── SVG
+        └── Project2_BaseName.svg
 ```
 
 ## Deploying
@@ -92,4 +107,4 @@ Don't hesitate to submit issues or pull requests. This is by nature an instable 
 
 We maintain a squashed Docker image of KiCad develpment version on top of ArchLinux [here](https://hub.docker.com/r/toroid/kicad-base/).
 
-Our libraries and the scripts behind this plugin are added in another image, [here](https://hub.docker.com/r/toroid/kicad/). This way we can accelerate the update process of the plugin without building KiCad every time.
+The scripts behind this plugin are added in another image, [here](https://hub.docker.com/r/toroid/kicad/). This way we can accelerate the update process of the plugin without building KiCad every time.
