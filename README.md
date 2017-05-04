@@ -107,9 +107,9 @@ Don't hesitate to submit issues or pull requests. This is by nature an instable 
 
 We maintain a squashed Docker image of KiCad develpment version on top of ArchLinux [here](https://hub.docker.com/r/toroid/kicad-base/).
 
-The scripts behind this plugin are added in another image, [here](https://hub.docker.com/r/toroid/kicad/). This way we can accelerate the update process of the plugin without building KiCad every time.
-
 ## License
+
+This project is made available under the GNU General Public License(GPL) version 3 or grater.
 
 KiCad is made available under the GNU General Public License(GPL) version 3 or greater.
 PcbDraw is made available under the MIT License.
