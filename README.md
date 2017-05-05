@@ -97,7 +97,7 @@ CI-BUILD
 
 ## Deploying
 
-You can then take the `CI-BUILD` directory and deploy the results to some server. We use [drone-mella](https://git.toroid.io/drone-plugins/drone-mella) sometimes to upload to [OwnCloud](https://owncloud.org/).
+You can then take the `CI-BUILD` directory and deploy the results to some server. We use [drone-mella](https://github.com/Toroid-io/drone-mella) sometimes to upload to [OwnCloud](https://owncloud.org/).
 
 ## Contibuting
 

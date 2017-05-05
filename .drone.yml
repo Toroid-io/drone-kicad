@@ -15,7 +15,7 @@ pipeline:
   scipts:
     image: bravissimolabs/alpine-git
     commands:
-      - git clone https://git.toroid.io/KiCad/ci-scripts.git
+      - git clone https://github.com/Toroid-io/kicad-ci-scripts
       - git clone https://github.com/yaqwsx/PcbDraw
 
   latest:
