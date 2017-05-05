@@ -74,6 +74,21 @@ func main() {
 			Usage:  "Download templates",
 			EnvVar: "PLUGIN_TEMPLATE",
 		},
+		cli.StringSliceFlag{
+			Name:   "deps.svglib",
+			Usage:  "Svg Models for PcbDraw",
+			EnvVar: "PLUGIN_SVG_LIB",
+		},
+		cli.StringSliceFlag{
+			Name:   "options.svglibdirs",
+			Usage:  "SVG lib paths to pass to the svg generator",
+			EnvVar: "PLUGIN_SVG_LIB_DIRS",
+		},
+		cli.BoolFlag{
+			Name:   "options.svg",
+			Usage:  "Generate SVG output",
+			EnvVar: "PLUGIN_SVG",
+		},
 		cli.StringFlag{
 			Name:   "deps.basedir",
 			Usage:  "Base directory for dependencies",
@@ -113,9 +128,11 @@ func run(c *cli.Context) error {
 			Names: c.StringSlice("projects.names"),
 		},
 		Options: Options{
-			Sch:    c.Bool("options.schematic"),
-			Bom:    c.Bool("options.bom"),
-			GrbGen: c.IsSet("options.gerber"),
+			Sch:        c.Bool("options.schematic"),
+			Bom:        c.Bool("options.bom"),
+			GrbGen:     c.IsSet("options.gerber"),
+			SvgLibDirs: c.StringSlice("options.svglibdirs"),
+			Svg:        c.Bool("options.svg"),
 		},
 		Dependencies: Dependencies{
 			Libraries:  c.StringSlice("deps.libs"),
@@ -123,6 +140,7 @@ func run(c *cli.Context) error {
 			Modules3d:  c.StringSlice("deps.3d"),
 			Basedir:    c.String("deps.basedir"),
 			Templates:  c.StringSlice("deps.template"),
+			SvgLibs:    c.StringSlice("deps.svglib"),
 		},
 		Netrc: Netrc{
 			Login:    c.String("netrc.username"),

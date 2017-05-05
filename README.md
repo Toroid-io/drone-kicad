@@ -1,3 +1,4 @@
+[![Build Status](https://bianca.toroid.io/api/badges/Toroid-io/drone-kicad/status.svg)](https://bianca.toroid.io/Toroid-io/drone-kicad)
 ## drone-kicad
 
 `drone-kicad` is a [drone](https://github.com/drone/drone) plugin for generating KiCad EDA output files.
@@ -18,11 +19,14 @@
 - `pretty`: Collection of extra footprints used by the project. They are cloned into `deps_dir/footprints`.
 - `3d`: Collection of extra 3D models used by the project. They are cloned into `deps_dir/modules/packages3d`.
 - `template`: Collection of extra templates used by the project. They are cloned into `deps_dir/template`.
+- `svg`: `true|false`. Enables the generation of SVG output.
+- `svg_lib`: Collection of svg footprint repos used for svg output generation.
+- `svg_lib_dirs`: Paths where to look for svg footprints.
 
 ## Example configuration
 
 ```yml
-pipeline:                                                                                                                                                                                      
+pipeline:
   kicad:
     image: toroid/drone-kicad
     projects_names:
@@ -36,7 +40,15 @@ pipeline:
       all: true
       protel: true
       splitth: true
+    svg: true
+    svg_lib:
+      - https://git.server.com/username/awesome-svg-library
+      - https://git.server.com/username/awesome-svg-library-2
+    svg_lib_dirs:
+      - awesome-svg-library/Version1
 ```
+
+In this example, `awesome-svg-library` may contain footprints under `Old/Version2` directory and `awesome-svg-library-2` may contain footprints under the root directory.
 
 ## Output
 
@@ -58,9 +70,11 @@ CI-BUILD
 │   │   ├── Project1_BaseName.gts
 │   │   ├── Project1_BaseName-NPTH.drl
 │   │   └── Project1_BaseName-PTH.drl
-│   └── SCH
-│       ├── export_schematic_screencast.ogv
-│       └── Project1_BaseName.pdf
+│   ├── SCH
+│   │   ├── export_schematic_screencast.ogv
+│   │   └── Project1_BaseName.pdf
+│   └── SVG
+│       └── Project1_BaseName.svg
 └── Project2_BaseName
     ├── BOM
     │   ├── export_bom_screencast.ogv
@@ -75,14 +89,16 @@ CI-BUILD
     │   ├── Project2_BaseName.gts
     │   ├── Project2_BaseName-NPTH.drl
     │   └── Project2_BaseName-PTH.drl
-    └── SCH
-        ├── export_schematic_screencast.ogv
-        └── Project2_BaseName.pdf
+    ├── SCH
+    │   ├── export_schematic_screencast.ogv
+    │   └── Project2_BaseName.pdf
+    └── SVG
+        └── Project2_BaseName.svg
 ```
 
 ## Deploying
 
-You can then take the `CI-BUILD` directory and deploy the results to some server. We use [drone-mella](https://git.toroid.io/drone-plugins/drone-mella) sometimes to upload to [OwnCloud](https://owncloud.org/).
+You can then take the `CI-BUILD` directory and deploy the results to some server. We use [drone-mella](https://github.com/Toroid-io/drone-mella) sometimes to upload to [OwnCloud](https://owncloud.org/).
 
 ## Contibuting
 
@@ -92,4 +108,9 @@ Don't hesitate to submit issues or pull requests. This is by nature an instable 
 
 We maintain a squashed Docker image of KiCad develpment version on top of ArchLinux [here](https://hub.docker.com/r/toroid/kicad-base/).
 
-Our libraries and the scripts behind this plugin are added in another image, [here](https://hub.docker.com/r/toroid/kicad/). This way we can accelerate the update process of the plugin without building KiCad every time.
+## License
+
+This project is made available under the GNU General Public License(GPL) version 3 or grater.
+
+KiCad is made available under the GNU General Public License(GPL) version 3 or greater.
+PcbDraw is made available under the MIT License.
