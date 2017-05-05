@@ -48,7 +48,7 @@ pipeline:
       - awesome-svg-library/Version1
 ```
 
-In this example, `awesome-svg-library` may contain footprints under `Old/Version2` directory and `awesome-svg-library-2` may contain footprints under the root directory.
+In this example, `awesome-svg-library` may contain footprints under `Version1` directory and `awesome-svg-library-2` may contain footprints under the root directory.
 
 ## Output
 
