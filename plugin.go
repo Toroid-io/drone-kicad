@@ -16,6 +16,7 @@ const (
 	sch_script    = "/bin/ci-scripts/export_schematic.py"
 	bom_script    = "/bin/ci-scripts/export_bom.py"
 	grb_script    = "/bin/ci-scripts/export_grb.py"
+	stp_bin       = "/usr/bin/kicad2step"
 	svg_script    = "/bin/PcbDraw/pcbdraw.py"
 	style_dir     = "/bin/PcbDraw/styles"
 	default_style = "gatema-green"
@@ -71,10 +72,9 @@ type (
 		GrbGen     bool         // Generate Gerber files
 		SvgLibDirs []string     // SVG lib folder to pass to the svg generator
 		Svg        bool         // Generate SVG output
+		Stp        bool         // Generate Step PCB
 		//Brd	bool // Generate PCB plot (pdf)
 		//Lyr	bool // Generate plot for each layer (pdf)
-		//Wrl	bool // Generate VRML PCB
-		//Stp	bool // Generate Step PCB
 		//3d	bool // Generate plot of 3D view (png)
 	}
 
@@ -145,6 +145,11 @@ func (p Plugin) Exec() error {
 			cmds = append(cmds, commandGerber(pjtname, p.Options.Grb))
 		}
 	}
+	if p.Options.Stp {
+		for _, pjtname := range p.Projects.Names {
+			cmds = append(cmds, commandSTP(pjtname))
+		}
+	}
 
 	var svg_lib_dirs []string
 	if len(p.Options.SvgLibDirs) > 0 {
@@ -174,6 +179,38 @@ func (p Plugin) Exec() error {
 	return nil
 }
 
+func commandSTP(pjtname string) *exec.Cmd {
+
+	var board []string
+	board = append(board, pjtname, ".kicad_pcb")
+
+	var stp []string
+	stp = append(stp, pjtname, ".stp")
+
+	var output []string
+	output = append(output, "CI-BUILD/", path.Base(pjtname), "/STP/", path.Base(pjtname), ".stp")
+
+	err := os.MkdirAll(path.Dir(strings.Join(output, "")), 0777)
+	if err != nil {
+		fmt.Println("Directory couldn't be created!")
+	}
+
+	var stpCmd []string
+	stpCmd = append(stpCmd, stp_bin, " ", strings.Join(board, ""))
+
+	var mvCmd []string
+	mvCmd = append(mvCmd, "mv", " ", strings.Join(stp, ""), " ", strings.Join(output, ""))
+
+	var allCmd []string
+	allCmd = append(allCmd, strings.Join(stpCmd, ""), " && ", strings.Join(mvCmd, ""))
+
+	return exec.Command(
+		"/bin/bash",
+		"-c",
+		strings.Join(allCmd, ""),
+	)
+}
+
 func commandSVG(pjtname string, svg_lib_dirs []string) *exec.Cmd {
 
 	var style []string
@@ -190,7 +227,7 @@ func commandSVG(pjtname string, svg_lib_dirs []string) *exec.Cmd {
 	var board []string
 	board = append(board, pjtname, ".kicad_pcb")
 
-	var c = exec.Command(
+	return exec.Command(
 		pythonexec,
 		"-u",
 		svg_script,
@@ -199,8 +236,6 @@ func commandSVG(pjtname string, svg_lib_dirs []string) *exec.Cmd {
 		strings.Join(output, ""),
 		strings.Join(board, ""),
 	)
-
-	return c
 }
 
 func commandClone(depurl string, deptype int, basedir string) *exec.Cmd {

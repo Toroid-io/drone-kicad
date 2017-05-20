@@ -89,6 +89,11 @@ func main() {
 			Usage:  "Generate SVG output",
 			EnvVar: "PLUGIN_SVG",
 		},
+		cli.BoolFlag{
+			Name:   "options.stp",
+			Usage:  "Generate Step output",
+			EnvVar: "PLUGIN_STP",
+		},
 		cli.StringFlag{
 			Name:   "deps.basedir",
 			Usage:  "Base directory for dependencies",
@@ -133,6 +138,7 @@ func run(c *cli.Context) error {
 			GrbGen:     c.IsSet("options.gerber"),
 			SvgLibDirs: c.StringSlice("options.svglibdirs"),
 			Svg:        c.Bool("options.svg"),
+			Stp:        c.Bool("options.stp"),
 		},
 		Dependencies: Dependencies{
 			Libraries:  c.StringSlice("deps.libs"),

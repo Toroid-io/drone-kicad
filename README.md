@@ -18,6 +18,7 @@
 - `library`: Collection of extra libraries used by the project. They are cloned into `deps_dir/library`.
 - `pretty`: Collection of extra footprints used by the project. They are cloned into `deps_dir/footprints`.
 - `3d`: Collection of extra 3D models used by the project. They are cloned into `deps_dir/modules/packages3d`.
+- `stp`: Enables generation of 3D board in STEP format.
 - `template`: Collection of extra templates used by the project. They are cloned into `deps_dir/template`.
 - `svg`: `true|false`. Enables the generation of SVG output.
 - `svg_lib`: Collection of svg footprint repos used for svg output generation.
@@ -46,6 +47,7 @@ pipeline:
       - https://git.server.com/username/awesome-svg-library-2
     svg_lib_dirs:
       - awesome-svg-library/Version1
+    stp: true
 ```
 
 In this example, `awesome-svg-library` may contain footprints under `Version1` directory and `awesome-svg-library-2` may contain footprints under the root directory.
@@ -73,6 +75,8 @@ CI-BUILD
 │   ├── SCH
 │   │   ├── export_schematic_screencast.ogv
 │   │   └── Project1_BaseName.pdf
+│   ├── STP
+│   │   └── Project1_BaseName.stp
 │   └── SVG
 │       └── Project1_BaseName.svg
 └── Project2_BaseName
@@ -92,6 +96,8 @@ CI-BUILD
     ├── SCH
     │   ├── export_schematic_screencast.ogv
     │   └── Project2_BaseName.pdf
+    ├── STP
+    │   └── Project2_BaseName.stp
     └── SVG
         └── Project2_BaseName.svg
 ```
