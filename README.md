@@ -23,6 +23,11 @@
 - `svg`: `true|false`. Enables the generation of SVG output.
 - `svg_lib`: Collection of svg footprint repos used for svg output generation.
 - `svg_lib_dirs`: Paths where to look for svg footprints.
+- `tags`: Enables board tagging with one or several of the following data:
+    - `all` : Prints all fields
+    - `date` : Prints date in text element with text `$date$`
+    - `commit` : Prints first 8 characters of commit SHA in text element with text `$commit$`
+    - `tag` : Prints tag in text element with text `$tag$`
 
 ## Example configuration
 
@@ -48,6 +53,8 @@ pipeline:
     svg_lib_dirs:
       - awesome-svg-library/Version1
     stp: true
+    tags:
+      commit: true
 ```
 
 In this example, `awesome-svg-library` may contain footprints under `Version1` directory and `awesome-svg-library-2` may contain footprints under the root directory.

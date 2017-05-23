@@ -16,6 +16,7 @@ const (
 	sch_script    = "/bin/ci-scripts/export_schematic.py"
 	bom_script    = "/bin/ci-scripts/export_bom.py"
 	grb_script    = "/bin/ci-scripts/export_grb.py"
+	tag_script    = "/bin/ci-scripts/tag_board.py"
 	stp_bin       = "/usr/bin/kicad2step"
 	svg_script    = "/bin/PcbDraw/pcbdraw.py"
 	style_dir     = "/bin/PcbDraw/styles"
@@ -49,7 +50,7 @@ type (
 		Password string
 	}
 
-	// Gerber defines the options for exporting Gerber files
+	// GerberLayers defines the options for exporting Gerber files
 	GerberLayers struct {
 		All      bool `json:"all"`
 		Protel   bool `json:"protel"`
@@ -64,20 +65,31 @@ type (
 		Splitth  bool `json:"splitth"`
 	}
 
+	// Tags defines wich tags to add to the board
+	Tags struct {
+		All    bool `json:"all"`
+		Tag    bool `json:"tag"`
+		Commit bool `json:"commit"`
+		Date   bool `json:"date"`
+	}
+
 	// Options defines what to generate
 	Options struct {
 		Sch        bool         // Generate Schematic (pdf)
 		Bom        bool         // Generate BOM (xml & xlsx)
-		Grb        GerberLayers // Gerber file layers
+		Grb        GerberLayers // Gerber layers enabled
 		GrbGen     bool         // Generate Gerber files
 		SvgLibDirs []string     // SVG lib folder to pass to the svg generator
 		Svg        bool         // Generate SVG output
 		Stp        bool         // Generate Step PCB
+		Tags       Tags         // Tags enabled
+		Tag        bool         // Tag board
 		//Brd	bool // Generate PCB plot (pdf)
 		//Lyr	bool // Generate plot for each layer (pdf)
 		//3d	bool // Generate plot of 3D view (png)
 	}
 
+	// Dependencies defines project dependencies to be cloned
 	Dependencies struct {
 		Libraries  []string // External libraries
 		Footprints []string // External footprints
@@ -87,6 +99,12 @@ type (
 		SvgLibs    []string // External SVG models
 	}
 
+	// Commit handles commit information
+	Commit struct {
+		Tag string // tag if tag event
+		Sha string // commit sha
+	}
+
 	// Plugin defines the KiCad plugin parameters
 	Plugin struct {
 		Client       Client       // Client configuration
@@ -94,6 +112,7 @@ type (
 		Options      Options      // Plugin options
 		Dependencies Dependencies // Projects dependencies
 		Netrc        Netrc        // Authentication
+		Commit       Commit       // Commit information
 	}
 )
 
@@ -130,6 +149,11 @@ func (p Plugin) Exec() error {
 		cmds = append(cmds, commandClone(dep, DEP_TYPE_SVG, p.Dependencies.Basedir))
 	}
 
+	if p.Options.Tag {
+		for _, pjtname := range p.Projects.Names {
+			cmds = append(cmds, commandTag(p.Commit, pjtname, p.Options.Tags))
+		}
+	}
 	if p.Options.Sch {
 		for _, pjtname := range p.Projects.Names {
 			cmds = append(cmds, commandSchematic(pjtname))
@@ -264,6 +288,44 @@ func commandClone(depurl string, deptype int, basedir string) *exec.Cmd {
 		"/bin/sh",
 		"-c",
 		strings.Join(cmd, " "),
+	)
+}
+
+func commandTag(c Commit, pjtname string, tags Tags) *exec.Cmd {
+
+	var options []string
+
+	options = append(options, "-u", tag_script)
+	options = append(options, "--brd", pjtname)
+
+	var sha string = c.Sha[0:8]
+
+	if tags.All {
+		options = append(options, "--tag-date",
+			"--tag-commit", "--commit", sha)
+		if c.Tag != "" {
+			options = append(options,
+				"--tag-tag", "--tag", c.Tag)
+		}
+		return exec.Command(
+			pythonexec,
+			options...,
+		)
+	}
+
+	if tags.Date {
+		options = append(options, "--tag-date")
+	}
+	if tags.Commit {
+		options = append(options, "--tag-commit", "--commit", sha)
+	}
+	if tags.Tag && c.Tag != "" {
+		options = append(options, "--tag-tag", "--tag", c.Tag)
+	}
+
+	return exec.Command(
+		pythonexec,
+		options...,
 	)
 }
 
