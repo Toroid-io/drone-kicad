@@ -50,6 +50,11 @@ func main() {
 			EnvVar: "PLUGIN_BOM",
 		},
 		cli.StringFlag{
+			Name:   "options.tags",
+			Usage:  "tag board with certain data",
+			EnvVar: "PLUGIN_TAGS",
+		},
+		cli.StringFlag{
 			Name:   "options.gerber",
 			Usage:  "generate gerber files",
 			EnvVar: "PLUGIN_GERBER",
@@ -114,6 +119,16 @@ func main() {
 			Usage:  "netrc password",
 			EnvVar: "DRONE_NETRC_PASSWORD",
 		},
+		cli.StringFlag{
+			Name:   "commit.tag",
+			Usage:  "commit tag",
+			EnvVar: "DRONE_TAG",
+		},
+		cli.StringFlag{
+			Name:   "commit.sha",
+			Usage:  "commit sha",
+			EnvVar: "DRONE_COMMIT_SHA",
+		},
 	}
 
 	if err := app.Run(os.Args); err != nil {
@@ -136,6 +151,7 @@ func run(c *cli.Context) error {
 			Sch:        c.Bool("options.schematic"),
 			Bom:        c.Bool("options.bom"),
 			GrbGen:     c.IsSet("options.gerber"),
+			Tag:        c.IsSet("options.tags"),
 			SvgLibDirs: c.StringSlice("options.svglibdirs"),
 			Svg:        c.Bool("options.svg"),
 			Stp:        c.Bool("options.stp"),
@@ -153,10 +169,21 @@ func run(c *cli.Context) error {
 			Machine:  c.String("netrc.machine"),
 			Password: c.String("netrc.password"),
 		},
+		Commit: Commit{
+			Tag: c.String("commit.tag"),
+			Sha: c.String("commit.sha"),
+		},
 	}
 
 	if plugin.Options.GrbGen {
 		err := json.Unmarshal([]byte(c.String("options.gerber")), &plugin.Options.Grb)
+		if err != nil {
+			return err
+		}
+	}
+
+	if plugin.Options.Tag {
+		err := json.Unmarshal([]byte(c.String("options.tags")), &plugin.Options.Tags)
 		if err != nil {
 			return err
 		}
