@@ -127,4 +127,5 @@ We maintain a squashed Docker image of KiCad development version on top of ArchL
 This project is made available under the GNU General Public License(GPL) version 3 or grater.
 
 KiCad is made available under the GNU General Public License(GPL) version 3 or greater.
+
 PcbDraw is made available under the MIT License.
