@@ -28,6 +28,7 @@
     - `date` : Prints date in text element with text `$date$`
     - `commit` : Prints first 8 characters of commit SHA in text element with text `$commit$`
     - `tag` : Prints tag in text element with text `$tag$`
+    - `sed` : If the text element is located in a footprint, just sed the board file. `sed` implies `all`.
 
 ## Example configuration
 
@@ -113,13 +114,13 @@ CI-BUILD
 
 You can then take the `CI-BUILD` directory and deploy the results to some server. We use [drone-mella](https://github.com/Toroid-io/drone-mella) sometimes to upload to [OwnCloud](https://owncloud.org/).
 
-## Contibuting
+## Contributing
 
 Don't hesitate to submit issues or pull requests. This is by nature an instable project (see next section).
 
 ## Base images
 
-We maintain a squashed Docker image of KiCad develpment version on top of ArchLinux [here](https://hub.docker.com/r/toroid/kicad-base/).
+We maintain a squashed Docker image of KiCad development version on top of ArchLinux [here](https://hub.docker.com/r/toroid/kicad-base/).
 
 ## License
 
