@@ -17,6 +17,9 @@ pipeline:
     commands:
       - git clone https://github.com/Toroid-io/kicad-ci-scripts
       - git clone https://github.com/yaqwsx/PcbDraw
+    when:
+      branch: [dev, master]
+      event: push
 
   publish:
     image: plugins/docker
