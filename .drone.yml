@@ -25,3 +25,11 @@ pipeline:
     when:
       branch: master
       event: push
+
+  publish_dev:
+    image: plugins/docker
+    repo: toroid/drone-kicad
+    tags: [dev]
+    when:
+      branch: dev
+      event: push

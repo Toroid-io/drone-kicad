@@ -9,6 +9,7 @@ import (
 	"path"
 	"path/filepath"
 	"strings"
+	"time"
 )
 
 const (
@@ -71,6 +72,7 @@ type (
 		Tag    bool `json:"tag"`
 		Commit bool `json:"commit"`
 		Date   bool `json:"date"`
+		Sed    bool `json:"sed"`
 	}
 
 	// Options defines what to generate
@@ -151,7 +153,16 @@ func (p Plugin) Exec() error {
 
 	if p.Options.Tag {
 		for _, pjtname := range p.Projects.Names {
-			cmds = append(cmds, commandTag(p.Commit, pjtname, p.Options.Tags))
+			if p.Options.Tags.Sed {
+				brd := strings.Join([]string{pjtname, ".kicad_pcb"}, "")
+				cmds = append(cmds, commandSed("\\$commit\\$", p.Commit.Sha[0:8], brd))
+				cmds = append(cmds, commandSed("\\$tag\\$", p.Commit.Tag, brd))
+				year, month, day := time.Now().Date()
+				date := fmt.Sprintf("%d/%d/%d", day, month, year)
+				cmds = append(cmds, commandSed("\\$date\\$", date, brd))
+			} else {
+				cmds = append(cmds, commandTag(p.Commit, pjtname, p.Options.Tags))
+			}
 		}
 	}
 	if p.Options.Sch {
@@ -291,14 +302,27 @@ func commandClone(depurl string, deptype int, basedir string) *exec.Cmd {
 	)
 }
 
+func commandSed(regex string, repl string, file string) *exec.Cmd {
+
+	var reg_repl []string
+	reg_repl = append(reg_repl, "s|", regex, "|", repl, "|")
+
+	return exec.Command(
+		"sed",
+		"-i",
+		"-e",
+		strings.Join(reg_repl, ""),
+		file,
+	)
+}
+
 func commandTag(c Commit, pjtname string, tags Tags) *exec.Cmd {
 
 	var options []string
+	var sha string = c.Sha[0:8]
 
 	options = append(options, "-u", tag_script)
 	options = append(options, "--brd", pjtname)
-
-	var sha string = c.Sha[0:8]
 
 	if tags.All {
 		options = append(options, "--tag-date",
