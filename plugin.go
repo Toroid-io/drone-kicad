@@ -12,15 +12,13 @@ import (
 )
 
 const (
-	pythonexec    = "python2"
-	sch_script    = "/bin/ci-scripts/export_schematic.py"
-	bom_script    = "/bin/ci-scripts/export_bom.py"
-	grb_script    = "/bin/ci-scripts/export_grb.py"
-	tag_script    = "/bin/ci-scripts/tag_board.py"
-	stp_bin       = "/usr/bin/kicad2step"
-	svg_script    = "/bin/PcbDraw/pcbdraw.py"
-	style_dir     = "/bin/PcbDraw/styles"
-	default_style = "gatema-green"
+	pythonexec = "python2"
+	sch_script = "/bin/ci-scripts/export_schematic.py"
+	bom_script = "/bin/ci-scripts/export_bom.py"
+	grb_script = "/bin/ci-scripts/export_grb.py"
+	tag_script = "/bin/ci-scripts/tag_board.py"
+	stp_bin    = "/usr/bin/kicad2step"
+	svg_script = "/bin/PcbDraw/pcbdraw.py"
 )
 
 const (
@@ -237,9 +235,6 @@ func commandSTP(pjtname string) *exec.Cmd {
 
 func commandSVG(pjtname string, svg_lib_dirs []string) *exec.Cmd {
 
-	var style []string
-	style = append(style, default_style, ".json")
-
 	var output []string
 	output = append(output, "CI-BUILD/", path.Base(pjtname), "/SVG/", path.Base(pjtname), ".svg")
 
@@ -255,10 +250,9 @@ func commandSVG(pjtname string, svg_lib_dirs []string) *exec.Cmd {
 		pythonexec,
 		"-u",
 		svg_script,
-		path.Join(style_dir, strings.Join(style, "")),
 		strings.Join(svg_lib_dirs, ","),
-		strings.Join(output, ""),
 		strings.Join(board, ""),
+		strings.Join(output, ""),
 	)
 }
 
