@@ -21,7 +21,8 @@ pipeline:
   publish:
     image: plugins/docker
     repo: toroid/drone-kicad
-    tags: [latest, 0.3]
+    tags: [latest, 0.4]
     when:
       branch: master
       event: push
+    secrets: [docker_username, docker_password]
