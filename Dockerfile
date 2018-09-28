@@ -1,5 +1,4 @@
-ARG BASE_TAG=latest
-FROM toroid/kicad-base:${BASE_TAG}
+FROM toroid/kicad-base
 ADD drone-kicad /bin/
 COPY kicad-ci-scripts /bin/ci-scripts
 COPY PcbDraw /bin/PcbDraw

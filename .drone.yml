@@ -34,8 +34,6 @@ pipeline:
     image: plugins/docker
     repo: toroid/drone-kicad
     tags: ${DRONE_DEPLOY_TO}
-    build_args:
-      - BASE_TAG=${DRONE_DEPLOY_TO}
     when:
       branch:
         exclude: master
