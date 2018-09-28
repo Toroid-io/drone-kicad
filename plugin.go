@@ -154,7 +154,11 @@ func (p Plugin) Exec() error {
 			if p.Options.Tags.Sed {
 				brd := strings.Join([]string{pjtname, ".kicad_pcb"}, "")
 				cmds = append(cmds, commandSed("\\$commit\\$", p.Commit.Sha[0:8], brd))
-				cmds = append(cmds, commandSed("\\$tag\\$", p.Commit.Tag, brd))
+				if len(p.Commit.Tag) > 0 {
+					cmds = append(cmds, commandSed("\\$tag\\$", p.Commit.Tag, brd))
+				} else {
+					cmds = append(cmds, commandSed("\\$tag\\$", "\"\"", brd))
+				}
 				year, month, day := time.Now().Date()
 				date := fmt.Sprintf("%d/%d/%d", day, month, year)
 				cmds = append(cmds, commandSed("\\$date\\$", date, brd))
