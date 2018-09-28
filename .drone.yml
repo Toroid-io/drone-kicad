@@ -35,8 +35,6 @@ pipeline:
     repo: toroid/drone-kicad
     tags: ${DRONE_DEPLOY_TO}
     when:
-      branch:
-        exclude: master
       event: deployment
       environment:
         exclude: production
