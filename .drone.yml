@@ -17,6 +17,8 @@ pipeline:
     commands:
       - git clone https://github.com/Toroid-io/kicad-ci-scripts
       - git clone https://github.com/yaqwsx/PcbDraw
+    when:
+      event: deployment
 
   publish:
     image: plugins/docker
@@ -24,5 +26,18 @@ pipeline:
     tags: [latest, 0.4]
     when:
       branch: master
-      event: push
+      event: deployment
+      environment: production
+    secrets: [docker_username, docker_password]
+
+  publish-test:
+    image: plugins/docker
+    repo: toroid/drone-kicad
+    tags: ${DRONE_DEPLOY_TO}
+    when:
+      branch:
+        exclude: master
+      event: deployment
+      environment:
+        exclude: production
     secrets: [docker_username, docker_password]

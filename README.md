@@ -1,4 +1,4 @@
-[![Build Status](https://bianca.toroid.io/api/badges/Toroid-io/drone-kicad/status.svg)](https://bianca.toroid.io/Toroid-io/drone-kicad)
+[![Build Status](https://bianca.toroid.io/api/badges/Toroid-io/drone-kicad/status.svg?branch=master)](https://bianca.toroid.io/Toroid-io/drone-kicad)
 ## drone-kicad
 
 `drone-kicad` is a [drone](https://github.com/drone/drone) plugin for generating KiCad EDA output files.
@@ -28,6 +28,7 @@
     - `date` : Prints date in text element with text `$date$`
     - `commit` : Prints first 8 characters of commit SHA in text element with text `$commit$`
     - `tag` : Prints tag in text element with text `$tag$`
+    - `sed` : If the text element is located in a footprint, just sed the board file. `sed` implies `all`.
 
 ## Example configuration
 
@@ -113,17 +114,18 @@ CI-BUILD
 
 You can then take the `CI-BUILD` directory and deploy the results to some server. We use [drone-mella](https://github.com/Toroid-io/drone-mella) sometimes to upload to [OwnCloud](https://owncloud.org/).
 
-## Contibuting
+## Contributing
 
 Don't hesitate to submit issues or pull requests. This is by nature an instable project (see next section).
 
 ## Base images
 
-We maintain a squashed Docker image of KiCad develpment version on top of ArchLinux [here](https://hub.docker.com/r/toroid/kicad-base/).
+We maintain a squashed Docker image of KiCad development version on top of ArchLinux [here](https://hub.docker.com/r/toroid/kicad-base/).
 
 ## License
 
 This project is made available under the GNU General Public License(GPL) version 3 or grater.
 
 KiCad is made available under the GNU General Public License(GPL) version 3 or greater.
+
 PcbDraw is made available under the MIT License.
