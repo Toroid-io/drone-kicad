@@ -18,7 +18,6 @@ const (
 	bom_script = "/bin/ci-scripts/export_bom.py"
 	grb_script = "/bin/ci-scripts/export_grb.py"
 	tag_script = "/bin/ci-scripts/tag_board.py"
-	stp_bin    = "/usr/bin/kicad2step"
 	svg_script = "/bin/PcbDraw/pcbdraw.py"
 )
 
@@ -81,7 +80,6 @@ type (
 		GrbGen     bool         // Generate Gerber files
 		SvgLibDirs []string     // SVG lib folder to pass to the svg generator
 		Svg        bool         // Generate SVG output
-		Stp        bool         // Generate Step PCB
 		Tags       Tags         // Tags enabled
 		Tag        bool         // Tag board
 		//Brd	bool // Generate PCB plot (pdf)
@@ -182,11 +180,6 @@ func (p Plugin) Exec() error {
 			cmds = append(cmds, commandGerber(pjtname, p.Options.Grb))
 		}
 	}
-	if p.Options.Stp {
-		for _, pjtname := range p.Projects.Names {
-			cmds = append(cmds, commandSTP(pjtname))
-		}
-	}
 
 	var svg_lib_dirs []string
 	if len(p.Options.SvgLibDirs) > 0 {
@@ -214,38 +207,6 @@ func (p Plugin) Exec() error {
 	}
 
 	return nil
-}
-
-func commandSTP(pjtname string) *exec.Cmd {
-
-	var board []string
-	board = append(board, pjtname, ".kicad_pcb")
-
-	var stp []string
-	stp = append(stp, pjtname, ".stp")
-
-	var output []string
-	output = append(output, "CI-BUILD/", path.Base(pjtname), "/STP/", path.Base(pjtname), ".stp")
-
-	err := os.MkdirAll(path.Dir(strings.Join(output, "")), 0777)
-	if err != nil {
-		fmt.Println("Directory couldn't be created!")
-	}
-
-	var stpCmd []string
-	stpCmd = append(stpCmd, stp_bin, " ", strings.Join(board, ""))
-
-	var mvCmd []string
-	mvCmd = append(mvCmd, "mv", " ", strings.Join(stp, ""), " ", strings.Join(output, ""))
-
-	var allCmd []string
-	allCmd = append(allCmd, strings.Join(stpCmd, ""), " && ", strings.Join(mvCmd, ""))
-
-	return exec.Command(
-		"/bin/bash",
-		"-c",
-		strings.Join(allCmd, ""),
-	)
 }
 
 func commandSVG(pjtname string, svg_lib_dirs []string) *exec.Cmd {
