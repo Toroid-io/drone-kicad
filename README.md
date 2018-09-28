@@ -1,4 +1,4 @@
-[![Build Status](https://bianca.toroid.io/api/badges/Toroid-io/drone-kicad/status.svg)](https://bianca.toroid.io/Toroid-io/drone-kicad)
+[![Build Status](https://bianca.toroid.io/api/badges/Toroid-io/drone-kicad/status.svg?branch=master)](https://bianca.toroid.io/Toroid-io/drone-kicad)
 ## drone-kicad
 
 `drone-kicad` is a [drone](https://github.com/drone/drone) plugin for generating KiCad EDA output files.
