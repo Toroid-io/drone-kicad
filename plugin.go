@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -18,6 +19,8 @@ const (
 	bom_script = "/bin/ci-scripts/export_bom.py"
 	grb_script = "/bin/ci-scripts/export_grb.py"
 	tag_script = "/bin/ci-scripts/tag_board.py"
+	dlf_script = "/bin/ci-scripts/delete_footprints.py"
+	ftr_script = "/bin/ci-scripts/footprints_to_remove.sh"
 	svg_script = "/bin/PcbDraw/pcbdraw.py"
 )
 
@@ -46,6 +49,12 @@ type (
 		Machine  string
 		Login    string
 		Password string
+	}
+
+	// Variants defines the different varaints in the project
+	Variants struct {
+		Name    []string
+		Content []string
 	}
 
 	// GerberLayers defines the options for exporting Gerber files
@@ -82,6 +91,8 @@ type (
 		Svg        bool         // Generate SVG output
 		Tags       Tags         // Tags enabled
 		Tag        bool         // Tag board
+		DoVariants bool         // Create PCB variants
+		Variants   Variants     // PCB variants information
 		//Brd	bool // Generate PCB plot (pdf)
 		//Lyr	bool // Generate plot for each layer (pdf)
 		//3d	bool // Generate plot of 3D view (png)
@@ -147,6 +158,15 @@ func (p Plugin) Exec() error {
 		cmds = append(cmds, commandClone(dep, DEP_TYPE_SVG, p.Dependencies.Basedir))
 	}
 
+	if p.Options.DoVariants {
+		// Create a variant PCB file for each variant
+		for idx, variantName := range p.Options.Variants.Name {
+			for _, pjtname := range p.Projects.Names {
+				cmds = append(cmds, commandVariant(p.Options.Variants.Content[idx], variantName, pjtname))
+			}
+		}
+	}
+
 	if p.Options.Tag {
 		for _, pjtname := range p.Projects.Names {
 			if p.Options.Tags.Sed {
@@ -207,6 +227,49 @@ func (p Plugin) Exec() error {
 	}
 
 	return nil
+}
+
+func commandVariant(variantContent string, variantName string, pjtname string) *exec.Cmd {
+
+	var schematic []string
+	schematic = append(schematic, pjtname, ".sch")
+
+	var board []string
+	board = append(board, pjtname, ".kicad_pcb")
+
+	var options []string
+	options = append(options, pjtname)
+	options = append(options, strings.Split(variantContent, ",")...)
+
+	fmt.Printf("%s\n", variantContent)
+	fmt.Printf("%+v\n", strings.Split(variantContent, ","))
+
+	fpToRemove := exec.Command(
+		ftr_script,
+		options...,
+	)
+	var stdout bytes.Buffer
+	fpToRemove.Stdout = &stdout
+	err := fpToRemove.Run()
+	if err != nil {
+		fmt.Printf("%s", err)
+	}
+	outStr := string(stdout.Bytes())
+
+	var options2 []string
+	options2 = append(options2, "-u")
+	options2 = append(options2, dlf_script)
+	options2 = append(options2, "--brd")
+	options2 = append(options2, pjtname)
+	options2 = append(options2, "--footprints")
+	options2 = append(options2, outStr)
+	options2 = append(options2, "--variant")
+	options2 = append(options2, variantName)
+
+	return exec.Command(
+		pythonexec,
+		options2...,
+	)
 }
 
 func commandSVG(pjtname string, svg_lib_dirs []string) *exec.Cmd {

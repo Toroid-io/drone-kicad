@@ -100,6 +100,11 @@ func main() {
 			EnvVar: "PLUGIN_DEPS_DIR",
 		},
 		cli.StringFlag{
+			Name:   "options.variants",
+			Usage:  "variants information",
+			EnvVar: "PLUGIN_VARIANTS",
+		},
+		cli.StringFlag{
 			Name:   "netrc.machine",
 			Usage:  "netrc machine",
 			EnvVar: "DRONE_NETRC_MACHINE",
@@ -149,6 +154,7 @@ func run(c *cli.Context) error {
 			Tag:        c.IsSet("options.tags"),
 			SvgLibDirs: c.StringSlice("options.svglibdirs"),
 			Svg:        c.Bool("options.svg"),
+			DoVariants: c.IsSet("options.variants"),
 		},
 		Dependencies: Dependencies{
 			Libraries:  c.StringSlice("deps.libs"),
@@ -178,6 +184,14 @@ func run(c *cli.Context) error {
 
 	if plugin.Options.Tag {
 		err := json.Unmarshal([]byte(c.String("options.tags")), &plugin.Options.Tags)
+		if err != nil {
+			return err
+		}
+	}
+
+	if plugin.Options.DoVariants {
+		err := json.Unmarshal([]byte(c.String("options.variants")), &plugin.Options.Variants)
+		fmt.Printf("%+v\n", plugin.Options.Variants)
 		if err != nil {
 			return err
 		}
