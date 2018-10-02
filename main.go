@@ -29,35 +29,10 @@ func main() {
 			Usage:  "client name",
 			EnvVar: "PLUGIN_CLIENT_NAME",
 		},
-		cli.StringSliceFlag{
-			Name:   "project.codes",
-			Usage:  "enterprise project Codes",
-			EnvVar: "PLUGIN_PROJECTS_CODES",
-		},
-		cli.StringSliceFlag{
-			Name:   "projects.names",
-			Usage:  "project names",
-			EnvVar: "PLUGIN_PROJECTS_NAMES",
-		},
-		cli.BoolFlag{
-			Name:   "options.schematic",
-			Usage:  "generate schematic",
-			EnvVar: "PLUGIN_SCHEMATIC",
-		},
-		cli.BoolFlag{
-			Name:   "options.bom",
-			Usage:  "generate bom",
-			EnvVar: "PLUGIN_BOM",
-		},
 		cli.StringFlag{
-			Name:   "options.tags",
-			Usage:  "tag board with certain data",
-			EnvVar: "PLUGIN_TAGS",
-		},
-		cli.StringFlag{
-			Name:   "options.gerber",
-			Usage:  "generate gerber files",
-			EnvVar: "PLUGIN_GERBER",
+			Name:   "projects",
+			Usage:  "projects structure",
+			EnvVar: "PLUGIN_PROJECTS",
 		},
 		cli.StringSliceFlag{
 			Name:   "deps.libs",
@@ -85,24 +60,14 @@ func main() {
 			EnvVar: "PLUGIN_SVG_LIB",
 		},
 		cli.StringSliceFlag{
-			Name:   "options.svglibdirs",
+			Name:   "deps.svglibdirs",
 			Usage:  "SVG lib paths to pass to the svg generator",
 			EnvVar: "PLUGIN_SVG_LIB_DIRS",
-		},
-		cli.BoolFlag{
-			Name:   "options.svg",
-			Usage:  "Generate SVG output",
-			EnvVar: "PLUGIN_SVG",
 		},
 		cli.StringFlag{
 			Name:   "deps.basedir",
 			Usage:  "Base directory for dependencies",
 			EnvVar: "PLUGIN_DEPS_DIR",
-		},
-		cli.StringFlag{
-			Name:   "options.variants",
-			Usage:  "variants information",
-			EnvVar: "PLUGIN_VARIANTS",
 		},
 		cli.StringFlag{
 			Name:   "netrc.machine",
@@ -139,23 +104,6 @@ func main() {
 func run(c *cli.Context) error {
 
 	plugin := Plugin{
-		Client: Client{
-			Code: c.String("client.code"),
-			Name: c.String("client.name"),
-		},
-		Projects: Projects{
-			Codes: c.StringSlice("projects.codes"),
-			Names: c.StringSlice("projects.names"),
-		},
-		Options: Options{
-			Sch:        c.Bool("options.schematic"),
-			Bom:        c.Bool("options.bom"),
-			GrbGen:     c.IsSet("options.gerber"),
-			Tag:        c.IsSet("options.tags"),
-			SvgLibDirs: c.StringSlice("options.svglibdirs"),
-			Svg:        c.Bool("options.svg"),
-			DoVariants: c.IsSet("options.variants"),
-		},
 		Dependencies: Dependencies{
 			Libraries:  c.StringSlice("deps.libs"),
 			Footprints: c.StringSlice("deps.pretty"),
@@ -163,6 +111,7 @@ func run(c *cli.Context) error {
 			Basedir:    c.String("deps.basedir"),
 			Templates:  c.StringSlice("deps.template"),
 			SvgLibs:    c.StringSlice("deps.svglib"),
+			SvgLibDirs: c.StringSlice("deps.svglibdirs"),
 		},
 		Netrc: Netrc{
 			Login:    c.String("netrc.username"),
@@ -175,27 +124,10 @@ func run(c *cli.Context) error {
 		},
 	}
 
-	if plugin.Options.GrbGen {
-		err := json.Unmarshal([]byte(c.String("options.gerber")), &plugin.Options.Grb)
-		if err != nil {
-			return err
-		}
+	err := json.Unmarshal([]byte(c.String("projects")), &plugin.Projects)
+	fmt.Printf("%+v\n", plugin.Projects)
+	if err != nil {
+		return err
 	}
-
-	if plugin.Options.Tag {
-		err := json.Unmarshal([]byte(c.String("options.tags")), &plugin.Options.Tags)
-		if err != nil {
-			return err
-		}
-	}
-
-	if plugin.Options.DoVariants {
-		err := json.Unmarshal([]byte(c.String("options.variants")), &plugin.Options.Variants)
-		fmt.Printf("%+v\n", plugin.Options.Variants)
-		if err != nil {
-			return err
-		}
-	}
-
 	return plugin.Exec()
 }
