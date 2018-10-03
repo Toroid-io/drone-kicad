@@ -34,7 +34,7 @@ func main() {
 			Usage:  "projects structure",
 			EnvVar: "PLUGIN_PROJECTS",
 		},
-		cli.StringSliceFlag{
+		cli.StringFlag{
 			Name:   "deps",
 			Usage:  "Download dependencies",
 			EnvVar: "PLUGIN_DEPENDENCIES",
