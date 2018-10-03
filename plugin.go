@@ -90,15 +90,14 @@ type (
 	}
 
 	// Dependencies defines project dependencies to be cloned
-	// TODO: Convertir en JSON
 	Dependencies struct {
-		Libraries  []string // External libraries
-		Footprints []string // External footprints
-		Modules3d  []string // External 3D models
-		Basedir    string   // Base directory
-		Templates  []string // External templates
-		SvgLibs    []string // External SVG models
-		SvgLibDirs []string // SVG lib folder to pass to the svg generator
+		Libraries  []string `json:"libraries"`  // External libraries
+		Footprints []string `json:"footprints"` // External footprints
+		Modules3d  []string `json:"modules3d"`  // External 3D models
+		Basedir    string   `json:"basedir"`    // Base directory
+		Templates  []string `json:"templates"`  // External templates
+		Svglibs    []string `json:"svglibs"`    // External SVG models
+		Svglibdirs []string `json:"svglibdirs"` // SVG lib folder to pass to the svg generator
 	}
 
 	// Commit handles commit information
@@ -160,13 +159,13 @@ func (p Plugin) Exec() error {
 		cmds = append(cmds, commandClone(dep, DEP_TYPE_TEMPLATE, p.Dependencies.Basedir))
 	}
 
-	for _, dep := range p.Dependencies.SvgLibs {
+	for _, dep := range p.Dependencies.Svglibs {
 		cmds = append(cmds, commandClone(dep, DEP_TYPE_SVG, p.Dependencies.Basedir))
 	}
 
 	var svg_lib_dirs []string
-	if len(p.Dependencies.SvgLibDirs) > 0 {
-		for _, lib := range p.Dependencies.SvgLibDirs {
+	if len(p.Dependencies.Svglibdirs) > 0 {
+		for _, lib := range p.Dependencies.Svglibdirs {
 			svg_lib_dirs = append(svg_lib_dirs, path.Join(p.Dependencies.Basedir, "svg-lib", lib))
 		}
 	}

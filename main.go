@@ -35,39 +35,9 @@ func main() {
 			EnvVar: "PLUGIN_PROJECTS",
 		},
 		cli.StringSliceFlag{
-			Name:   "deps.libs",
+			Name:   "deps",
 			Usage:  "Download dependencies",
-			EnvVar: "PLUGIN_LIBRARY",
-		},
-		cli.StringSliceFlag{
-			Name:   "deps.pretty",
-			Usage:  "Download footprints",
-			EnvVar: "PLUGIN_PRETTY",
-		},
-		cli.StringSliceFlag{
-			Name:   "deps.3d",
-			Usage:  "Download 3d Models",
-			EnvVar: "PLUGIN_3D",
-		},
-		cli.StringSliceFlag{
-			Name:   "deps.template",
-			Usage:  "Download templates",
-			EnvVar: "PLUGIN_TEMPLATE",
-		},
-		cli.StringSliceFlag{
-			Name:   "deps.svglib",
-			Usage:  "Svg Models for PcbDraw",
-			EnvVar: "PLUGIN_SVG_LIB",
-		},
-		cli.StringSliceFlag{
-			Name:   "deps.svglibdirs",
-			Usage:  "SVG lib paths to pass to the svg generator",
-			EnvVar: "PLUGIN_SVG_LIB_DIRS",
-		},
-		cli.StringFlag{
-			Name:   "deps.basedir",
-			Usage:  "Base directory for dependencies",
-			EnvVar: "PLUGIN_DEPS_DIR",
+			EnvVar: "PLUGIN_DEPENDENCIES",
 		},
 		cli.StringFlag{
 			Name:   "netrc.machine",
@@ -104,15 +74,6 @@ func main() {
 func run(c *cli.Context) error {
 
 	plugin := Plugin{
-		Dependencies: Dependencies{
-			Libraries:  c.StringSlice("deps.libs"),
-			Footprints: c.StringSlice("deps.pretty"),
-			Modules3d:  c.StringSlice("deps.3d"),
-			Basedir:    c.String("deps.basedir"),
-			Templates:  c.StringSlice("deps.template"),
-			SvgLibs:    c.StringSlice("deps.svglib"),
-			SvgLibDirs: c.StringSlice("deps.svglibdirs"),
-		},
 		Netrc: Netrc{
 			Login:    c.String("netrc.username"),
 			Machine:  c.String("netrc.machine"),
@@ -124,10 +85,15 @@ func run(c *cli.Context) error {
 		},
 	}
 
-	err := json.Unmarshal([]byte(c.String("projects")), &plugin.Projects)
-	fmt.Printf("%+v\n", plugin.Projects)
+	err := json.Unmarshal([]byte(c.String("deps")), &plugin.Dependencies)
 	if err != nil {
 		return err
 	}
+
+	err = json.Unmarshal([]byte(c.String("projects")), &plugin.Projects)
+	if err != nil {
+		return err
+	}
+
 	return plugin.Exec()
 }
