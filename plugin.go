@@ -114,19 +114,19 @@ type (
 	}
 
 	Project struct {
-		Code     string         `json:"code"`     // Enterprise project code
-		Main     string         `json:"main"`     // Enterprise project name
-		Client   Client         `json:"client"`   // Enterprise client code
-		Variants []Variant      `json:"variants"` // Project variants
-		Options  ProjectOptions `json:"options"`  // Project options
+		Code         string         `json:"code"`         // Enterprise project code
+		Main         string         `json:"main"`         // Enterprise project name
+		Client       Client         `json:"client"`       // Enterprise client code
+		Dependencies Dependencies   `json:"dependencies"` // Projects dependencies
+		Variants     []Variant      `json:"variants"`     // Project variants
+		Options      ProjectOptions `json:"options"`      // Project options
 	}
 
 	// Plugin defines the KiCad plugin parameters
 	Plugin struct {
-		Projects     []Project    // Projects configuration
-		Dependencies Dependencies // Projects dependencies
-		Netrc        Netrc        // Authentication
-		Commit       Commit       // Commit information
+		Projects []Project // Projects configuration
+		Netrc    Netrc     // Authentication
+		Commit   Commit    // Commit information
 	}
 )
 
@@ -139,38 +139,38 @@ func (p Plugin) Exec() error {
 
 	var cmds []*exec.Cmd
 
-	if p.Dependencies.Basedir == "" {
-		p.Dependencies.Basedir = "/usr/share/kicad"
-	}
-
-	for _, dep := range p.Dependencies.Libraries {
-		cmds = append(cmds, commandClone(dep, DEP_TYPE_LIB, p.Dependencies.Basedir))
-	}
-
-	for _, dep := range p.Dependencies.Footprints {
-		cmds = append(cmds, commandClone(dep, DEP_TYPE_PRETTY, p.Dependencies.Basedir))
-	}
-
-	for _, dep := range p.Dependencies.Modules3d {
-		cmds = append(cmds, commandClone(dep, DEP_TYPE_3D, p.Dependencies.Basedir))
-	}
-
-	for _, dep := range p.Dependencies.Templates {
-		cmds = append(cmds, commandClone(dep, DEP_TYPE_TEMPLATE, p.Dependencies.Basedir))
-	}
-
-	for _, dep := range p.Dependencies.Svglibs {
-		cmds = append(cmds, commandClone(dep, DEP_TYPE_SVG, p.Dependencies.Basedir))
-	}
-
-	var svg_lib_dirs []string
-	if len(p.Dependencies.Svglibdirs) > 0 {
-		for _, lib := range p.Dependencies.Svglibdirs {
-			svg_lib_dirs = append(svg_lib_dirs, path.Join(p.Dependencies.Basedir, "svg-lib", lib))
-		}
-	}
-
 	for _, project := range p.Projects {
+
+		if project.Dependencies.Basedir == "" {
+			project.Dependencies.Basedir = "/usr/share/kicad"
+		}
+
+		for _, dep := range project.Dependencies.Libraries {
+			cmds = append(cmds, commandClone(dep, DEP_TYPE_LIB, project.Dependencies.Basedir))
+		}
+
+		for _, dep := range project.Dependencies.Footprints {
+			cmds = append(cmds, commandClone(dep, DEP_TYPE_PRETTY, project.Dependencies.Basedir))
+		}
+
+		for _, dep := range project.Dependencies.Modules3d {
+			cmds = append(cmds, commandClone(dep, DEP_TYPE_3D, project.Dependencies.Basedir))
+		}
+
+		for _, dep := range project.Dependencies.Templates {
+			cmds = append(cmds, commandClone(dep, DEP_TYPE_TEMPLATE, project.Dependencies.Basedir))
+		}
+
+		for _, dep := range project.Dependencies.Svglibs {
+			cmds = append(cmds, commandClone(dep, DEP_TYPE_SVG, project.Dependencies.Basedir))
+		}
+
+		var svg_lib_dirs []string
+		if len(project.Dependencies.Svglibdirs) > 0 {
+			for _, lib := range project.Dependencies.Svglibdirs {
+				svg_lib_dirs = append(svg_lib_dirs, path.Join(project.Dependencies.Basedir, "svg-lib", lib))
+			}
+		}
 
 		// Export schematic
 		if project.Options.Sch {

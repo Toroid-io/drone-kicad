@@ -35,11 +35,6 @@ func main() {
 			EnvVar: "PLUGIN_PROJECTS",
 		},
 		cli.StringFlag{
-			Name:   "deps",
-			Usage:  "Download dependencies",
-			EnvVar: "PLUGIN_DEPENDENCIES",
-		},
-		cli.StringFlag{
 			Name:   "netrc.machine",
 			Usage:  "netrc machine",
 			EnvVar: "DRONE_NETRC_MACHINE",
@@ -85,12 +80,7 @@ func run(c *cli.Context) error {
 		},
 	}
 
-	err := json.Unmarshal([]byte(c.String("deps")), &plugin.Dependencies)
-	if err != nil {
-		return err
-	}
-
-	err = json.Unmarshal([]byte(c.String("projects")), &plugin.Projects)
+	err := json.Unmarshal([]byte(c.String("projects")), &plugin.Projects)
 	if err != nil {
 		return err
 	}
