@@ -178,29 +178,6 @@ func (p Plugin) Exec() error {
 			cmds = append(cmds, commandSchematic(project.Main))
 		}
 
-		// Tag board
-		if project.Options.Tags.Sed {
-			cmds = append(cmds, commandSed("\\$commit\\$", p.Commit.Sha[0:8], project.Main, ""))
-			if len(p.Commit.Tag) > 0 {
-				cmds = append(cmds, commandSed("\\$tag\\$", p.Commit.Tag, project.Main, ""))
-			} else {
-				cmds = append(cmds, commandSed("\\$tag\\$", "\"\"", project.Main, ""))
-			}
-			year, month, day := time.Now().Date()
-			date := fmt.Sprintf("%d/%d/%d", day, month, year)
-			cmds = append(cmds, commandSed("\\$date\\$", date, project.Main, ""))
-		} else {
-			cmds = append(cmds, commandTag(p.Commit, project.Main, "", project.Options.Tags))
-		}
-
-		// Export Gerbers
-		cmds = append(cmds, commandGerber(project.Main, "", project.Options.Grb))
-
-		// Export SVG
-		if project.Options.Svg {
-			cmds = append(cmds, commandSVG(project.Main, "", svg_lib_dirs))
-		}
-
 		// Export BOM (xml)
 		if project.Options.Bom {
 			cmds = append(cmds, commandBOM(project.Main))
@@ -234,6 +211,29 @@ func (p Plugin) Exec() error {
 
 			// Export Gerbers
 			cmds = append(cmds, commandGerber(project.Main, variant.Name, variant.Options.Grb))
+		}
+
+		// Tag board
+		if project.Options.Tags.Sed {
+			cmds = append(cmds, commandSed("\\$commit\\$", p.Commit.Sha[0:8], project.Main, ""))
+			if len(p.Commit.Tag) > 0 {
+				cmds = append(cmds, commandSed("\\$tag\\$", p.Commit.Tag, project.Main, ""))
+			} else {
+				cmds = append(cmds, commandSed("\\$tag\\$", "\"\"", project.Main, ""))
+			}
+			year, month, day := time.Now().Date()
+			date := fmt.Sprintf("%d/%d/%d", day, month, year)
+			cmds = append(cmds, commandSed("\\$date\\$", date, project.Main, ""))
+		} else {
+			cmds = append(cmds, commandTag(p.Commit, project.Main, "", project.Options.Tags))
+		}
+
+		// Export Gerbers
+		cmds = append(cmds, commandGerber(project.Main, "", project.Options.Grb))
+
+		// Export SVG
+		if project.Options.Svg {
+			cmds = append(cmds, commandSVG(project.Main, "", svg_lib_dirs))
 		}
 	}
 
