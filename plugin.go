@@ -265,9 +265,6 @@ func commandVariant(variantContent string, variantName string, pjtname string) *
 	options = append(options, pjtname)
 	options = append(options, strings.Split(variantContent, ",")...)
 
-	fmt.Printf("%s\n", variantContent)
-	fmt.Printf("%+v\n", strings.Split(variantContent, ","))
-
 	fpToRemove := exec.Command(
 		ftr_script,
 		options...,
