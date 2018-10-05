@@ -15,7 +15,7 @@ pipeline:
   scripts:
     image: bravissimolabs/alpine-git
     commands:
-      - git clone -b variants https://github.com/Toroid-io/kicad-ci-scripts
+      - git clone https://github.com/Toroid-io/kicad-ci-scripts
       - git clone https://github.com/yaqwsx/PcbDraw
     when:
       event: deployment
