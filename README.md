@@ -160,8 +160,10 @@ tree:
 │   │   ├── project_name-F.Cu.gbr
 │   │   ├── project_name-F.Mask.gbr
 │   │   └── project_name-F.SilkS.gbr
-│   └── SVG
-│       └── project_name.svg
+│   ├── SVG
+│   │   └── project_name.svg
+│   └── PCB
+│       └── project_name.kicad_pcb
 ├── Variant1
 │   ├── GBR
 │   │   ├── project_name_Variant1-B.Cu.gbr
@@ -172,8 +174,10 @@ tree:
 │   │   ├── project_name_Variant1-F.Cu.gbr
 │   │   ├── project_name_Variant1-F.Mask.gbr
 │   │   └── project_name_Variant1-F.SilkS.gbr
-│   └── DLF
-│       └── dlfVariant1.ogv
+│   ├── DLF
+│   │   └── dlfVariant1.ogv
+│   └── PCB
+│       └── project_name_Variant1.kicad_pcb
 ├── Variant2
 │   ├── SVG
 │   │   └── project_name_Variant2.svg
@@ -196,7 +200,7 @@ Don't hesitate to submit issues or pull requests. This is by nature an instable 
 
 ## Base images
 
-We maintain a squashed Docker image of KiCad development version on top of ArchLinux [here](https://hub.docker.com/r/toroid/kicad-base/).
+We maintain a Docker image of KiCad v5 on top of ArchLinux [here](https://hub.docker.com/r/toroid/kicad-base/).
 
 ## License
 
