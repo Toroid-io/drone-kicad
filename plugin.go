@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -18,6 +19,8 @@ const (
 	bom_script = "/bin/ci-scripts/export_bom.py"
 	grb_script = "/bin/ci-scripts/export_grb.py"
 	tag_script = "/bin/ci-scripts/tag_board.py"
+	dlf_script = "/bin/ci-scripts/delete_footprints.py"
+	ftr_script = "/bin/ci-scripts/footprints_to_remove.sh"
 	svg_script = "/bin/PcbDraw/pcbdraw.py"
 )
 
@@ -30,16 +33,11 @@ const (
 )
 
 type (
+
 	// Client defines the client data to be embedded in some documents
 	Client struct {
-		Code string // Enterprise client code
-		Name string // Enterprise client name
-	}
-
-	// Projects defines the KiCad projects
-	Projects struct {
-		Codes []string // Enterprise project code
-		Names []string // Enterprise project name
+		Code string `json:"code"` // Enterprise client code
+		Name string `json:"name"` // Enterprise client name
 	}
 
 	Netrc struct {
@@ -72,16 +70,22 @@ type (
 		Sed    bool `json:"sed"`
 	}
 
-	// Options defines what to generate
-	Options struct {
-		Sch        bool         // Generate Schematic (pdf)
-		Bom        bool         // Generate BOM (xml & xlsx)
-		Grb        GerberLayers // Gerber layers enabled
-		GrbGen     bool         // Generate Gerber files
-		SvgLibDirs []string     // SVG lib folder to pass to the svg generator
-		Svg        bool         // Generate SVG output
-		Tags       Tags         // Tags enabled
-		Tag        bool         // Tag board
+	// Options for projects
+	ProjectOptions struct {
+		Sch  bool         // Generate Schematic (pdf)
+		Bom  bool         // Generate BOM xml
+		Grb  GerberLayers // Gerber layers enabled
+		Svg  bool         // Generate SVG output
+		Tags Tags         // Tags enabled
+		Pcb  bool         // Export PCB file
+	}
+
+	// Options for variants
+	VariantOptions struct {
+		Grb  GerberLayers // Gerber layers enabled
+		Svg  bool         // Generate SVG output
+		Tags Tags         // Tags enabled
+		Pcb  bool         // Export PCB file
 		//Brd	bool // Generate PCB plot (pdf)
 		//Lyr	bool // Generate plot for each layer (pdf)
 		//3d	bool // Generate plot of 3D view (png)
@@ -89,12 +93,13 @@ type (
 
 	// Dependencies defines project dependencies to be cloned
 	Dependencies struct {
-		Libraries  []string // External libraries
-		Footprints []string // External footprints
-		Modules3d  []string // External 3D models
-		Basedir    string   // Base directory
-		Templates  []string // External templates
-		SvgLibs    []string // External SVG models
+		Libraries  []string `json:"libraries"`  // External libraries
+		Footprints []string `json:"footprints"` // External footprints
+		Modules3d  []string `json:"modules3d"`  // External 3D models
+		Basedir    string   `json:"basedir"`    // Base directory
+		Templates  []string `json:"templates"`  // External templates
+		Svglibs    []string `json:"svglibs"`    // External SVG models
+		Svglibdirs []string `json:"svglibdirs"` // SVG lib folder to pass to the svg generator
 	}
 
 	// Commit handles commit information
@@ -103,14 +108,27 @@ type (
 		Sha string // commit sha
 	}
 
+	// Variant defines a varaint in the project
+	Variant struct {
+		Name    string
+		Content string
+		Options VariantOptions
+	}
+
+	Project struct {
+		Code         string         `json:"code"`         // Enterprise project code
+		Main         string         `json:"main"`         // Enterprise project name
+		Client       Client         `json:"client"`       // Enterprise client code
+		Dependencies Dependencies   `json:"dependencies"` // Projects dependencies
+		Variants     []Variant      `json:"variants"`     // Project variants
+		Options      ProjectOptions `json:"options"`      // Project options
+	}
+
 	// Plugin defines the KiCad plugin parameters
 	Plugin struct {
-		Client       Client       // Client configuration
-		Projects     Projects     // Projects configuration
-		Options      Options      // Plugin options
-		Dependencies Dependencies // Projects dependencies
-		Netrc        Netrc        // Authentication
-		Commit       Commit       // Commit information
+		Projects []Project // Projects configuration
+		Netrc    Netrc     // Authentication
+		Commit   Commit    // Commit information
 	}
 )
 
@@ -123,104 +141,215 @@ func (p Plugin) Exec() error {
 
 	var cmds []*exec.Cmd
 
-	if p.Dependencies.Basedir == "" {
-		p.Dependencies.Basedir = "/usr/share/kicad"
-	}
+	for _, project := range p.Projects {
 
-	for _, dep := range p.Dependencies.Libraries {
-		cmds = append(cmds, commandClone(dep, DEP_TYPE_LIB, p.Dependencies.Basedir))
-	}
+		if project.Dependencies.Basedir == "" {
+			project.Dependencies.Basedir = "/usr/share/kicad"
+		}
 
-	for _, dep := range p.Dependencies.Footprints {
-		cmds = append(cmds, commandClone(dep, DEP_TYPE_PRETTY, p.Dependencies.Basedir))
-	}
+		for _, dep := range project.Dependencies.Libraries {
+			cmds = append(cmds, commandClone(dep, DEP_TYPE_LIB, project.Dependencies.Basedir))
+		}
 
-	for _, dep := range p.Dependencies.Modules3d {
-		cmds = append(cmds, commandClone(dep, DEP_TYPE_3D, p.Dependencies.Basedir))
-	}
+		for _, dep := range project.Dependencies.Footprints {
+			cmds = append(cmds, commandClone(dep, DEP_TYPE_PRETTY, project.Dependencies.Basedir))
+		}
 
-	for _, dep := range p.Dependencies.Templates {
-		cmds = append(cmds, commandClone(dep, DEP_TYPE_TEMPLATE, p.Dependencies.Basedir))
-	}
+		for _, dep := range project.Dependencies.Modules3d {
+			cmds = append(cmds, commandClone(dep, DEP_TYPE_3D, project.Dependencies.Basedir))
+		}
 
-	for _, dep := range p.Dependencies.SvgLibs {
-		cmds = append(cmds, commandClone(dep, DEP_TYPE_SVG, p.Dependencies.Basedir))
-	}
+		for _, dep := range project.Dependencies.Templates {
+			cmds = append(cmds, commandClone(dep, DEP_TYPE_TEMPLATE, project.Dependencies.Basedir))
+		}
 
-	if p.Options.Tag {
-		for _, pjtname := range p.Projects.Names {
-			if p.Options.Tags.Sed {
-				brd := strings.Join([]string{pjtname, ".kicad_pcb"}, "")
-				cmds = append(cmds, commandSed("\\$commit\\$", p.Commit.Sha[0:8], brd))
+		for _, dep := range project.Dependencies.Svglibs {
+			cmds = append(cmds, commandClone(dep, DEP_TYPE_SVG, project.Dependencies.Basedir))
+		}
+
+		var svg_lib_dirs []string
+		if len(project.Dependencies.Svglibdirs) > 0 {
+			for _, lib := range project.Dependencies.Svglibdirs {
+				svg_lib_dirs = append(svg_lib_dirs, path.Join(project.Dependencies.Basedir, "svg-lib", lib))
+			}
+		}
+
+		// Export schematic
+		if project.Options.Sch {
+			cmds = append(cmds, commandSchematic(project.Main))
+		}
+
+		// Export BOM (xml)
+		if project.Options.Bom {
+			cmds = append(cmds, commandBOM(project.Main))
+		}
+
+		// Process each variant
+		for _, variant := range project.Variants {
+
+			// Create a variant PCB file for each variant
+			cmds = append(cmds, commandVariant(variant, project.Main))
+
+			// Tag board
+			if variant.Options.Tags.Sed {
+				cmds = append(cmds, commandSed("\\$commit\\$", p.Commit.Sha[0:8], project.Main, variant.Name))
 				if len(p.Commit.Tag) > 0 {
-					cmds = append(cmds, commandSed("\\$tag\\$", p.Commit.Tag, brd))
+					cmds = append(cmds, commandSed("\\$tag\\$", p.Commit.Tag, project.Main, variant.Name))
 				} else {
-					cmds = append(cmds, commandSed("\\$tag\\$", "\"\"", brd))
+					cmds = append(cmds, commandSed("\\$tag\\$", "\"\"", project.Main, variant.Name))
 				}
 				year, month, day := time.Now().Date()
 				date := fmt.Sprintf("%d/%d/%d", day, month, year)
-				cmds = append(cmds, commandSed("\\$date\\$", date, brd))
+				cmds = append(cmds, commandSed("\\$date\\$", date, project.Main, variant.Name))
 			} else {
-				cmds = append(cmds, commandTag(p.Commit, pjtname, p.Options.Tags))
+				cmds = append(cmds, commandTag(p.Commit, project.Main, variant.Name, variant.Options.Tags))
 			}
-		}
-	}
-	if p.Options.Sch {
-		for _, pjtname := range p.Projects.Names {
-			cmds = append(cmds, commandSchematic(pjtname))
-		}
-	}
-	if p.Options.Bom {
-		for _, pjtname := range p.Projects.Names {
-			cmds = append(cmds, commandBOM(pjtname))
-		}
-	}
-	if p.Options.GrbGen {
-		for _, pjtname := range p.Projects.Names {
-			cmds = append(cmds, commandGerber(pjtname, p.Options.Grb))
-		}
-	}
 
-	var svg_lib_dirs []string
-	if len(p.Options.SvgLibDirs) > 0 {
-		for _, lib := range p.Options.SvgLibDirs {
-			svg_lib_dirs = append(svg_lib_dirs, path.Join(p.Dependencies.Basedir, "svg-lib", lib))
-		}
-	}
+			// Export PCB
+			if variant.Options.Pcb {
+				cmds = append(cmds, commandCopyPcb(project.Main, variant.Name))
+			}
 
-	if p.Options.Svg {
-		for _, pjtname := range p.Projects.Names {
-			cmds = append(cmds, commandSVG(pjtname, svg_lib_dirs))
+			// Export SVG
+			if variant.Options.Svg {
+				cmds = append(cmds, commandSVG(project.Main, variant.Name, svg_lib_dirs))
+			}
+
+			// Export Gerbers
+			cmds = append(cmds, commandGerber(project.Main, variant.Name, variant.Options.Grb))
+		}
+
+		// Tag board
+		if project.Options.Tags.Sed {
+			cmds = append(cmds, commandSed("\\$commit\\$", p.Commit.Sha[0:8], project.Main, ""))
+			if len(p.Commit.Tag) > 0 {
+				cmds = append(cmds, commandSed("\\$tag\\$", p.Commit.Tag, project.Main, ""))
+			} else {
+				cmds = append(cmds, commandSed("\\$tag\\$", "\"\"", project.Main, ""))
+			}
+			year, month, day := time.Now().Date()
+			date := fmt.Sprintf("%d/%d/%d", day, month, year)
+			cmds = append(cmds, commandSed("\\$date\\$", date, project.Main, ""))
+		} else {
+			cmds = append(cmds, commandTag(p.Commit, project.Main, "", project.Options.Tags))
+		}
+
+		// Export PCB
+		if project.Options.Pcb {
+			cmds = append(cmds, commandCopyPcb(project.Main, ""))
+		}
+
+		// Export Gerbers
+		cmds = append(cmds, commandGerber(project.Main, "", project.Options.Grb))
+
+		// Export SVG
+		if project.Options.Svg {
+			cmds = append(cmds, commandSVG(project.Main, "", svg_lib_dirs))
 		}
 	}
 
 	// execute all commands in batch mode.
 	for _, cmd := range cmds {
-		cmd.Stdout = os.Stdout
-		cmd.Stderr = os.Stderr
-		trace(cmd)
+		if cmd != nil {
+			cmd.Stdout = os.Stdout
+			cmd.Stderr = os.Stderr
+			trace(cmd)
 
-		err := cmd.Run()
-		if err != nil {
-			return err
+			err := cmd.Run()
+			if err != nil {
+				return err
+			}
 		}
 	}
 
 	return nil
 }
 
-func commandSVG(pjtname string, svg_lib_dirs []string) *exec.Cmd {
+func commandCopyPcb(pjtname string, variant string) *exec.Cmd {
+
+	var board []string
+	if len(variant) > 0 {
+		board = append(board, pjtname, "_", variant, ".kicad_pcb")
+	} else {
+		board = append(board, pjtname, ".kicad_pcb")
+	}
+
+	var folder []string
+	if len(variant) > 0 {
+		folder = append(folder, "CI-BUILD/", variant, "/PCB")
+	} else {
+		folder = append(folder, "CI-BUILD/", path.Base(pjtname), "/PCB")
+	}
+
+	var cmd []string
+	cmd = append(cmd, "mkdir", "-p", strings.Join(folder, ""), "&&", "cp", strings.Join(board, ""), strings.Join(folder, ""))
+
+	return exec.Command(
+		"/bin/sh",
+		"-c",
+		strings.Join(cmd, " "),
+	)
+}
+
+func commandVariant(variant Variant, pjtname string) *exec.Cmd {
+
+	var schematic []string
+	schematic = append(schematic, pjtname, ".sch")
+
+	var board []string
+	board = append(board, pjtname, ".kicad_pcb")
+
+	var options []string
+	options = append(options, pjtname)
+	options = append(options, strings.Split(variant.Content, ",")...)
+
+	fpToRemove := exec.Command(
+		ftr_script,
+		options...,
+	)
+	var stdout bytes.Buffer
+	fpToRemove.Stdout = &stdout
+	err := fpToRemove.Run()
+	if err != nil {
+		fmt.Printf("%s", err)
+	}
+	outStr := string(stdout.Bytes())
+
+	var options2 []string
+	options2 = append(options2, "-u")
+	options2 = append(options2, dlf_script)
+	options2 = append(options2, "--brd")
+	options2 = append(options2, pjtname)
+	options2 = append(options2, "--footprints")
+	options2 = append(options2, outStr)
+	options2 = append(options2, "--variant")
+	options2 = append(options2, variant.Name)
+
+	return exec.Command(
+		pythonexec,
+		options2...,
+	)
+}
+
+func commandSVG(pjtname string, variant string, svg_lib_dirs []string) *exec.Cmd {
 
 	var output []string
-	output = append(output, "CI-BUILD/", path.Base(pjtname), "/SVG/", path.Base(pjtname), ".svg")
-
+	if len(variant) > 0 {
+		output = append(output, "CI-BUILD/", variant, "/SVG/", path.Base(pjtname), "_", variant, ".svg")
+	} else {
+		output = append(output, "CI-BUILD/", path.Base(pjtname), "/SVG/", path.Base(pjtname), ".svg")
+	}
 	err := os.MkdirAll(path.Dir(strings.Join(output, "")), 0777)
 	if err != nil {
 		fmt.Println("Directory couldn't be created!")
 	}
 
 	var board []string
-	board = append(board, pjtname, ".kicad_pcb")
+	if len(variant) > 0 {
+		board = append(board, pjtname, "_", variant, ".kicad_pcb")
+	} else {
+		board = append(board, pjtname, ".kicad_pcb")
+	}
 
 	return exec.Command(
 		pythonexec,
@@ -261,34 +390,57 @@ func commandClone(depurl string, deptype int, basedir string) *exec.Cmd {
 	)
 }
 
-func commandSed(regex string, repl string, file string) *exec.Cmd {
+func commandSed(regex string, repl string, prjname string, variant string) *exec.Cmd {
 
 	var reg_repl []string
 	reg_repl = append(reg_repl, "s|", regex, "|", repl, "|")
+
+	var board []string
+	if len(variant) > 0 {
+		board = append(board, prjname, "_", variant, ".kicad_pcb")
+	} else {
+		board = append(board, prjname, ".kicad_pcb")
+	}
 
 	return exec.Command(
 		"sed",
 		"-i",
 		"-e",
 		strings.Join(reg_repl, ""),
-		file,
+		strings.Join(board, ""),
 	)
 }
 
-func commandTag(c Commit, pjtname string, tags Tags) *exec.Cmd {
+func commandTag(c Commit, pjtname string, variant string, tags Tags) *exec.Cmd {
 
 	var options []string
-	var sha string = c.Sha[0:8]
+	var sha string
+	if len(c.Sha) > 7 {
+		sha = c.Sha[0:8]
+	} else if len(c.Sha) > 0 {
+		sha = c.Sha
+	} else {
+		sha = "dummy"
+	}
 
 	options = append(options, "-u", tag_script)
-	options = append(options, "--brd", pjtname)
+
+	var board []string
+	if len(variant) > 0 {
+		board = append(board, pjtname, "_", variant)
+	} else {
+		board = append(board, pjtname)
+	}
+	options = append(options, "--brd", strings.Join(board, ""))
+	options = append(options, "--commit", sha)
 
 	if tags.All {
 		options = append(options, "--tag-date",
-			"--tag-commit", "--commit", sha)
-		if c.Tag != "" {
-			options = append(options,
-				"--tag-tag", "--tag", c.Tag)
+			"--tag-commit")
+		if len(c.Tag) > 0 {
+			options = append(options, "--tag-tag", "--tag", c.Tag)
+		} else {
+			options = append(options, "--tag", "dummy")
 		}
 		return exec.Command(
 			pythonexec,
@@ -300,27 +452,41 @@ func commandTag(c Commit, pjtname string, tags Tags) *exec.Cmd {
 		options = append(options, "--tag-date")
 	}
 	if tags.Commit {
-		options = append(options, "--tag-commit", "--commit", sha)
+		options = append(options, "--tag-commit")
 	}
-	if tags.Tag && c.Tag != "" {
+	if tags.Tag && len(c.Tag) > 0 {
 		options = append(options, "--tag-tag", "--tag", c.Tag)
+	} else {
+		options = append(options, "--tag", "dummy")
 	}
 
-	return exec.Command(
-		pythonexec,
-		options...,
-	)
+	if len(options) > 8 {
+		return exec.Command(
+			pythonexec,
+			options...,
+		)
+	} else {
+		return nil
+	}
 }
 
-func commandGerber(pjtname string, lyr GerberLayers) *exec.Cmd {
+func commandGerber(pjtname string, variant string, lyr GerberLayers) *exec.Cmd {
 
 	var options []string
 
 	options = append(options, "-u", grb_script)
-	options = append(options, "--brd", pjtname)
+	if len(variant) > 0 {
+		options = append(options, "--brd", strings.Join([]string{pjtname, "_", variant}, ""))
+	} else {
+		options = append(options, "--brd", pjtname)
+	}
 
 	var dir []string
-	dir = append(dir, "CI-BUILD/", path.Base(pjtname), "/GBR")
+	if len(variant) > 0 {
+		dir = append(dir, "CI-BUILD/", variant, "/GBR")
+	} else {
+		dir = append(dir, "CI-BUILD/", path.Base(pjtname), "/GBR")
+	}
 	options = append(options, "--dir", strings.Join(dir, ""))
 
 	if lyr.Splitth {
@@ -361,10 +527,14 @@ func commandGerber(pjtname string, lyr GerberLayers) *exec.Cmd {
 		options = append(options, "--drl")
 	}
 
-	return exec.Command(
-		pythonexec,
-		options...,
-	)
+	if len(options) > 6 {
+		return exec.Command(
+			pythonexec,
+			options...,
+		)
+	} else {
+		return nil
+	}
 }
 
 func commandSchematic(pjtname string) *exec.Cmd {
