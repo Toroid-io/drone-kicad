@@ -39,6 +39,7 @@ These apply to the main PCB:
       drl: true | false           // Drill file
       splitth: true | false       // Split plated/non-plated through holes
     svg: true | false             // Generate SVG plot (Front)
+    pcb: true | false             // Export PCB file
     tags:
       all: true | false           // Print all
       tag: true | false           // Print tag
@@ -70,6 +71,7 @@ These apply to each variant individually:
       drl: true | false
       splitth: true | false
     svg: true | false
+    pcb: true | false
     tags:
       all: true | false
       tag: true | false
@@ -123,6 +125,7 @@ pipeline:
     projects:
       - main: Project1/project_name
         options:
+          pcb: true
           sch: true
           gbr:
             all: true
@@ -131,6 +134,7 @@ pipeline:
           - name: "Variant1"
             content: "OPT1,OPT2"
             options:
+              pcb: true
               grb:
                 all: true
           - name: "Variant2"
@@ -146,9 +150,6 @@ root). The previous configuration would lead to the following output
 tree:
 
 ```
-├── DLF
-│   ├── dlfVariant1.ogv
-│   ├── dlfVariant2.ogv
 ├── project_name
 │   ├── GBR
 │   │   ├── project_name-B.Cu.gbr
@@ -162,18 +163,22 @@ tree:
 │   └── SVG
 │       └── project_name.svg
 ├── Variant1
-│   └── GBR
-│       ├── project_name_Variant1-B.Cu.gbr
-│       ├── project_name_Variant1-B.Mask.gbr
-│       ├── project_name_Variant1-B.SilkS.gbr
-│       ├── project_name_Variant1.drl
-│       ├── project_name_Variant1-Edge.Cuts.gbr
-│       ├── project_name_Variant1-F.Cu.gbr
-│       ├── project_name_Variant1-F.Mask.gbr
-│       └── project_name_Variant1-F.SilkS.gbr
+│   ├── GBR
+│   │   ├── project_name_Variant1-B.Cu.gbr
+│   │   ├── project_name_Variant1-B.Mask.gbr
+│   │   ├── project_name_Variant1-B.SilkS.gbr
+│   │   ├── project_name_Variant1.drl
+│   │   ├── project_name_Variant1-Edge.Cuts.gbr
+│   │   ├── project_name_Variant1-F.Cu.gbr
+│   │   ├── project_name_Variant1-F.Mask.gbr
+│   │   └── project_name_Variant1-F.SilkS.gbr
+│   └── DLF
+│       └── dlfVariant1.ogv
 ├── Variant2
-│   └── SVG
-│       └── project_name_Variant2.svg
+│   ├── SVG
+│   │   └── project_name_Variant2.svg
+│   └── DLF
+│       └── dlfVariant2.ogv
 └── SCH
     ├── export_schematic_screencast.ogv
     └── project_name.pdf

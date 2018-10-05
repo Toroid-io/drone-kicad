@@ -77,6 +77,7 @@ type (
 		Grb  GerberLayers // Gerber layers enabled
 		Svg  bool         // Generate SVG output
 		Tags Tags         // Tags enabled
+		Pcb  bool         // Export PCB file
 	}
 
 	// Options for variants
@@ -84,6 +85,7 @@ type (
 		Grb  GerberLayers // Gerber layers enabled
 		Svg  bool         // Generate SVG output
 		Tags Tags         // Tags enabled
+		Pcb  bool         // Export PCB file
 		//Brd	bool // Generate PCB plot (pdf)
 		//Lyr	bool // Generate plot for each layer (pdf)
 		//3d	bool // Generate plot of 3D view (png)
@@ -186,7 +188,7 @@ func (p Plugin) Exec() error {
 		for _, variant := range project.Variants {
 
 			// Create a variant PCB file for each variant
-			cmds = append(cmds, commandVariant(variant.Content, variant.Name, project.Main))
+			cmds = append(cmds, commandVariant(variant, project.Main))
 
 			// Tag board
 			if variant.Options.Tags.Sed {
@@ -201,6 +203,11 @@ func (p Plugin) Exec() error {
 				cmds = append(cmds, commandSed("\\$date\\$", date, project.Main, variant.Name))
 			} else {
 				cmds = append(cmds, commandTag(p.Commit, project.Main, variant.Name, variant.Options.Tags))
+			}
+
+			// Export PCB
+			if variant.Options.Pcb {
+				cmds = append(cmds, commandCopyPcb(project.Main, variant.Name))
 			}
 
 			// Export SVG
@@ -225,6 +232,11 @@ func (p Plugin) Exec() error {
 			cmds = append(cmds, commandSed("\\$date\\$", date, project.Main, ""))
 		} else {
 			cmds = append(cmds, commandTag(p.Commit, project.Main, "", project.Options.Tags))
+		}
+
+		// Export PCB
+		if project.Options.Pcb {
+			cmds = append(cmds, commandCopyPcb(project.Main, ""))
 		}
 
 		// Export Gerbers
@@ -253,7 +265,33 @@ func (p Plugin) Exec() error {
 	return nil
 }
 
-func commandVariant(variantContent string, variantName string, pjtname string) *exec.Cmd {
+func commandCopyPcb(pjtname string, variant string) *exec.Cmd {
+
+	var board []string
+	if len(variant) > 0 {
+		board = append(board, pjtname, "_", variant, ".kicad_pcb")
+	} else {
+		board = append(board, pjtname, ".kicad_pcb")
+	}
+
+	var folder []string
+	if len(variant) > 0 {
+		folder = append(folder, "CI-BUILD/", variant, "/PCB")
+	} else {
+		folder = append(folder, "CI-BUILD/", path.Base(pjtname), "/PCB")
+	}
+
+	var cmd []string
+	cmd = append(cmd, "mkdir", "-p", strings.Join(folder, ""), "&&", "cp", strings.Join(board, ""), strings.Join(folder, ""))
+
+	return exec.Command(
+		"/bin/sh",
+		"-c",
+		strings.Join(cmd, " "),
+	)
+}
+
+func commandVariant(variant Variant, pjtname string) *exec.Cmd {
 
 	var schematic []string
 	schematic = append(schematic, pjtname, ".sch")
@@ -263,7 +301,7 @@ func commandVariant(variantContent string, variantName string, pjtname string) *
 
 	var options []string
 	options = append(options, pjtname)
-	options = append(options, strings.Split(variantContent, ",")...)
+	options = append(options, strings.Split(variant.Content, ",")...)
 
 	fpToRemove := exec.Command(
 		ftr_script,
@@ -285,7 +323,7 @@ func commandVariant(variantContent string, variantName string, pjtname string) *
 	options2 = append(options2, "--footprints")
 	options2 = append(options2, outStr)
 	options2 = append(options2, "--variant")
-	options2 = append(options2, variantName)
+	options2 = append(options2, variant.Name)
 
 	return exec.Command(
 		pythonexec,
