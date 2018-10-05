@@ -14,7 +14,7 @@ It can also tag your board with the current commit, tag and date.
 
 `drone-kicad` can also create variants from your main PCB provided your
 components have a field named `variant` and a corresponding value. This
-way you can generate independant output for the main PCB and each
+way you can generate independent output for the main PCB and each
 variant of your choice.
 
 ## Main Options
@@ -22,7 +22,6 @@ variant of your choice.
 These apply to the main PCB:
 
 ```
-  code: project_code
   main: dir/main_pcb
   options:
     sch: true | false
@@ -116,23 +115,29 @@ pipeline:
       basedir: "/opt/toroid"
       libraries:
         - https://github.com/toroid-io/toroid-kicad-library
-        svg_lib:
-          - https://git.server.com/username/awesome-svg-library
-          - https://git.server.com/username/awesome-svg-library-2
-        svg_lib_dirs:
-          - awesome-svg-library/Version1
+      svg_lib:
+        - https://git.server.com/username/awesome-svg-library
+        - https://git.server.com/username/awesome-svg-library-2
+      svg_lib_dirs:
+        - awesome-svg-library/Version1
     projects:
-      - main: Project1/Project1_BaseName
-        code: PRJ_01
+      - main: Project1/project_name
         options:
           sch: true
           gbr:
             all: true
-            protel: true
-          bom: true
           svg: true
-          tags:
-            commit: true
+        variants:
+          - name: "Variant1"
+            content: "OPT1,OPT2"
+            options:
+              grb:
+                all: true
+          - name: "Variant2"
+            content: "OPT1,OPT3,OPT4"
+            options:
+              svg: true
+```
 
 ## Output
 
@@ -141,7 +146,40 @@ root). The previous configuration would lead to the following output
 tree:
 
 ```
+├── DLF
+│   ├── dlfVariant1.ogv
+│   ├── dlfVariant2.ogv
+├── project_name
+│   ├── GBR
+│   │   ├── project_name-B.Cu.gbr
+│   │   ├── project_name-B.Mask.gbr
+│   │   ├── project_name-B.SilkS.gbr
+│   │   ├── project_name.drl
+│   │   ├── project_name-Edge.Cuts.gbr
+│   │   ├── project_name-F.Cu.gbr
+│   │   ├── project_name-F.Mask.gbr
+│   │   └── project_name-F.SilkS.gbr
+│   └── SVG
+│       └── project_name.svg
+├── Variant1
+│   └── GBR
+│       ├── project_name_Variant1-B.Cu.gbr
+│       ├── project_name_Variant1-B.Mask.gbr
+│       ├── project_name_Variant1-B.SilkS.gbr
+│       ├── project_name_Variant1.drl
+│       ├── project_name_Variant1-Edge.Cuts.gbr
+│       ├── project_name_Variant1-F.Cu.gbr
+│       ├── project_name_Variant1-F.Mask.gbr
+│       └── project_name_Variant1-F.SilkS.gbr
+├── Variant2
+│   └── SVG
+│       └── project_name_Variant2.svg
+└── SCH
+    ├── export_schematic_screencast.ogv
+    └── project_name.pdf
 ```
+
+The `DLF` folder contains the screen cast for the variants generation process.
 
 ## Deploying
 
