@@ -22,28 +22,28 @@ variant of your choice.
 These apply to the main PCB:
 
 ```
-  main: dir/main_pcb
+  main: dir/main_pcb              // Path to main file, no extension
   options:
-    sch: true | false
-    bom: true | false
+    sch: true | false             // Generate schematic pdf outptut
+    bom: true | false             // Generate XML BOM
     grb:
-      all: true | false
-      protel: true | false
-      fcu: true | false
-      bcu: true | false
-      fmask: true | false
-      bmask: true | false
-      fsilks: true | false
-      bsilks: true | false
-      edgecuts: true | false
-      drl: true | false
-      splitth: true | false
-    svg: true | false
+      all: true | false           // Generate all gerber outputs
+      protel: true | false        // Use protel extensions
+      fcu: true | false           // Front copper
+      bcu: true | false           // Bottom copper
+      fmask: true | false         // Front mask
+      bmask: true | false         // Bottom mask
+      fsilks: true | false        // Front Silk
+      bsilks: true | false        // Bottom Silk
+      edgecuts: true | false      // Edge Cuts
+      drl: true | false           // Drill file
+      splitth: true | false       // Split plated/non-plated through holes
+    svg: true | false             // Generate SVG plot (Front)
     tags:
-      all: true | false
-      tag: true | false
-      commit: true | false
-      date: true | false
+      all: true | false           // Print all
+      tag: true | false           // Print tag
+      commit: true | false        // Print commit
+      date: true | false          // Print date
   variants:
    - {options for variant 1}
    - {options for variant 2}
@@ -54,9 +54,9 @@ These apply to the main PCB:
 These apply to each variant individually:
 
 ```
-  name: variant_name
-  content: OPT1,OPT2,OPT3
-  options:
+  name: variant_name              // Your awesome variant name
+  content: OPT1,OPT2,OPT3         // Comma separated variant field to match
+  options:                        // Same as before
     grb:
       all: true | false
       protel: true | false
