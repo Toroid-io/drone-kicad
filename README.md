@@ -160,11 +160,14 @@ tree:
 │   │   ├── project_name-F.Cu.gbr
 │   │   ├── project_name-F.Mask.gbr
 │   │   └── project_name-F.SilkS.gbr
+│   ├── SCH
+│   │   ├── export_schematic_screencast.ogv
+│   │   └── project_name.pdf
 │   ├── SVG
 │   │   └── project_name.svg
 │   └── PCB
-│       └── project_name.kicad_pcb
-├── Variant1
+│       └── project_name.kicad_pcb
+├── project_name_Variant1
 │   ├── GBR
 │   │   ├── project_name_Variant1-B.Cu.gbr
 │   │   ├── project_name_Variant1-B.Mask.gbr
@@ -177,15 +180,12 @@ tree:
 │   ├── DLF
 │   │   └── dlfVariant1.ogv
 │   └── PCB
-│       └── project_name_Variant1.kicad_pcb
-├── Variant2
+│       └── project_name_Variant1.kicad_pcb
+├── project_name_Variant2
 │   ├── SVG
 │   │   └── project_name_Variant2.svg
 │   └── DLF
 │       └── dlfVariant2.ogv
-└── SCH
-    ├── export_schematic_screencast.ogv
-    └── project_name.pdf
 ```
 
 The `DLF` folder contains the screen cast for the variants generation process.

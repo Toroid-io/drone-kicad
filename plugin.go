@@ -276,7 +276,7 @@ func commandCopyPcb(pjtname string, variant string) *exec.Cmd {
 
 	var folder []string
 	if len(variant) > 0 {
-		folder = append(folder, "CI-BUILD/", variant, "/PCB")
+		folder = append(folder, "CI-BUILD/", path.Base(pjtname), "_", variant, "/PCB")
 	} else {
 		folder = append(folder, "CI-BUILD/", path.Base(pjtname), "/PCB")
 	}
@@ -335,7 +335,7 @@ func commandSVG(pjtname string, variant string, svg_lib_dirs []string) *exec.Cmd
 
 	var output []string
 	if len(variant) > 0 {
-		output = append(output, "CI-BUILD/", variant, "/SVG/", path.Base(pjtname), "_", variant, ".svg")
+		output = append(output, "CI-BUILD/", path.Base(pjtname), "_", variant, "/SVG/", path.Base(pjtname), "_", variant, ".svg")
 	} else {
 		output = append(output, "CI-BUILD/", path.Base(pjtname), "/SVG/", path.Base(pjtname), ".svg")
 	}
@@ -483,9 +483,9 @@ func commandGerber(pjtname string, variant string, lyr GerberLayers) *exec.Cmd {
 
 	var dir []string
 	if len(variant) > 0 {
-		dir = append(dir, "CI-BUILD/", variant, "/GBR")
+		dir = append(dir, "CI-BUILD/", path.Base(pjtname), "_", variant, "/GRB")
 	} else {
-		dir = append(dir, "CI-BUILD/", path.Base(pjtname), "/GBR")
+		dir = append(dir, "CI-BUILD/", path.Base(pjtname), "/GRB")
 	}
 	options = append(options, "--dir", strings.Join(dir, ""))
 
