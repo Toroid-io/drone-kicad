@@ -21,81 +21,81 @@ variant of your choice.
 
 These apply to the main PCB:
 
-```
-  main: dir/main_pcb              // Path to main file, no extension
-  options:
-    sch: true | false             // Generate schematic pdf outptut
-    bom: true | false             // Generate XML BOM
-    grb:
-      all: true | false           // Generate all gerber outputs
-      protel: true | false        // Use protel extensions
-      fcu: true | false           // Front copper
-      bcu: true | false           // Bottom copper
-      fmask: true | false         // Front mask
-      bmask: true | false         // Bottom mask
-      fsilks: true | false        // Front Silk
-      bsilks: true | false        // Bottom Silk
-      edgecuts: true | false      // Edge Cuts
-      drl: true | false           // Drill file
-      splitth: true | false       // Split plated/non-plated through holes
-    svg: true | false             // Generate SVG plot (Front)
-    pcb: true | false             // Export PCB file
-    tags:
-      all: true | false           // Print all
-      tag: true | false           // Print tag
-      commit: true | false        // Print commit
-      date: true | false          // Print date
-  variants:
-   - {options for variant 1}
-   - {options for variant 2}
+```yml
+main: dir/main_pcb              # Path to main file, no extension
+options:
+  sch: true | false             # Generate schematic pdf outptut
+  bom: true | false             # Generate XML BOM
+  grb:
+    all: true | false           # Generate all gerber outputs
+    protel: true | false        # Use protel extensions
+    fcu: true | false           # Front copper
+    bcu: true | false           # Bottom copper
+    fmask: true | false         # Front mask
+    bmask: true | false         # Bottom mask
+    fsilks: true | false        # Front Silk
+    bsilks: true | false        # Bottom Silk
+    edgecuts: true | false      # Edge Cuts
+    drl: true | false           # Drill file
+    splitth: true | false       # Split plated/non-plated through holes
+  svg: true | false             # Generate SVG plot (Front)
+  pcb: true | false             # Export PCB file
+  tags:
+    all: true | false           # Print all
+    tag: true | false           # Print tag
+    commit: true | false        # Print commit
+    date: true | false          # Print date
+variants:
+ - {options for variant 1}
+ - {options for variant 2}
 ```
 
 ## Variant Options
 
 These apply to each variant individually:
 
-```
-  name: variant_name              // Your awesome variant name
-  content: OPT1,OPT2,OPT3         // Comma separated variant field to match
-  options:                        // Same as before
-    grb:
-      all: true | false
-      protel: true | false
-      fcu: true | false
-      bcu: true | false
-      fmask: true | false
-      bmask: true | false
-      fsilks: true | false
-      bsilks: true | false
-      edgecuts: true | false
-      drl: true | false
-      splitth: true | false
-    svg: true | false
-    pcb: true | false
-    tags:
-      all: true | false
-      tag: true | false
-      commit: true | false
-      date: true | false
+```yml
+name: variant_name              # Your awesome variant name
+content: OPT1,OPT2,OPT3         # Comma separated variant field to match
+options:                        # Same as before
+  grb:
+    all: true | false
+    protel: true | false
+    fcu: true | false
+    bcu: true | false
+    fmask: true | false
+    bmask: true | false
+    fsilks: true | false
+    bsilks: true | false
+    edgecuts: true | false
+    drl: true | false
+    splitth: true | false
+  svg: true | false
+  pcb: true | false
+  tags:
+    all: true | false
+    tag: true | false
+    commit: true | false
+    date: true | false
 ```
 
 ## Plugin options
 
-```
-  dependencies:
-    libraries:
-      - https://git.server.com/user/lib           // External libraries
-    footprints:
-      - https://git.server.com/user/footprints    // External footprints
-    modules3d:
-      - https://git.server.com/user/modules3d     // External 3D models
-    basedir: "/other/than/usr/share/kicad"        // Base directory
-    templates:
-      - https://git.server.com/user/templates     // External templates
-    svglibs:
-      - https://git.server.com/user/svglib        // External SVG models
-    svglibdirs:
-      - relative/path/1                           // SVG lib folder to pass to the svg generator
+```yml
+dependencies:
+  libraries:
+    - https://git.server.com/user/lib           # External libraries
+  footprints:
+    - https://git.server.com/user/footprints    # External footprints
+  modules3d:
+    - https://git.server.com/user/modules3d     # External 3D models
+  basedir: "/other/than/usr/share/kicad"        # Base directory
+  templates:
+    - https://git.server.com/user/templates     # External templates
+  svglibs:
+    - https://git.server.com/user/svglib        # External SVG models
+  svglibdirs:
+    - relative/path/1                           # SVG lib folder to pass to the svg generator
 ```
 
 ## Tagging
