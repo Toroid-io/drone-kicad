@@ -196,7 +196,7 @@ You can then take the `CI-BUILD` directory and deploy the results to some server
 
 ## Contributing
 
-Don't hesitate to submit issues or pull requests. This is by nature an instable project (see next section).
+Don't hesitate to submit issues or pull requests.
 
 ## Base images
 
