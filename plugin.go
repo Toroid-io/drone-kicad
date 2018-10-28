@@ -63,11 +63,12 @@ type (
 
 	// Tags defines wich tags to add to the board
 	Tags struct {
-		All    bool `json:"all"`
-		Tag    bool `json:"tag"`
-		Commit bool `json:"commit"`
-		Date   bool `json:"date"`
-		Sed    bool `json:"sed"`
+		All     bool `json:"all"`
+		Tag     bool `json:"tag"`
+		Commit  bool `json:"commit"`
+		Date    bool `json:"date"`
+		Sed     bool `json:"sed"`
+		Variant bool `json:"variant"`
 	}
 
 	// Options for projects
@@ -433,14 +434,23 @@ func commandTag(c Commit, pjtname string, variant string, tags Tags) *exec.Cmd {
 	}
 	options = append(options, "--brd", strings.Join(board, ""))
 	options = append(options, "--commit", sha)
+	if len(variant) > 0 {
+		options = append(options, "--variant", variant)
+	} else {
+		options = append(options, "--variant", "dummy")
+	}
 
 	if tags.All {
-		options = append(options, "--tag-date",
+		options = append(options,
+			"--tag-date",
 			"--tag-commit")
 		if len(c.Tag) > 0 {
 			options = append(options, "--tag-tag", "--tag", c.Tag)
 		} else {
 			options = append(options, "--tag", "dummy")
+		}
+		if len(variant) > 0 {
+			options = append(options, "--tag-variant")
 		}
 		return exec.Command(
 			pythonexec,
@@ -458,6 +468,9 @@ func commandTag(c Commit, pjtname string, variant string, tags Tags) *exec.Cmd {
 		options = append(options, "--tag-tag", "--tag", c.Tag)
 	} else {
 		options = append(options, "--tag", "dummy")
+	}
+	if tags.Variant && len(variant) > 0 {
+		options = append(options, "--tag-variant")
 	}
 
 	if len(options) > 8 {

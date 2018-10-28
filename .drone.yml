@@ -23,7 +23,7 @@ pipeline:
   publish:
     image: plugins/docker
     repo: toroid/drone-kicad
-    tags: [latest, 0.5.1]
+    tags: [latest, 0.5.2]
     when:
       branch: master
       event: deployment
