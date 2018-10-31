@@ -9,6 +9,7 @@ import (
 	"os/user"
 	"path"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -79,6 +80,7 @@ type (
 		Svg  bool         // Generate SVG output
 		Tags Tags         // Tags enabled
 		Pcb  bool         // Export PCB file
+		Wait int          // Delay before variant generation (allows Pcbnew to fully load)
 	}
 
 	// Options for variants
@@ -87,6 +89,7 @@ type (
 		Svg  bool         // Generate SVG output
 		Tags Tags         // Tags enabled
 		Pcb  bool         // Export PCB file
+		Wait int          // Delay before variant generation (allows Pcbnew to fully load)
 		//Brd	bool // Generate PCB plot (pdf)
 		//Lyr	bool // Generate plot for each layer (pdf)
 		//3d	bool // Generate plot of 3D view (png)
@@ -177,7 +180,7 @@ func (p Plugin) Exec() error {
 
 		// Export schematic
 		if project.Options.Sch {
-			cmds = append(cmds, commandSchematic(project.Main))
+			cmds = append(cmds, commandSchematic(project))
 		}
 
 		// Export BOM (xml)
@@ -189,7 +192,7 @@ func (p Plugin) Exec() error {
 		for _, variant := range project.Variants {
 
 			// Create a variant PCB file for each variant
-			cmds = append(cmds, commandVariant(variant, project.Main))
+			cmds = append(cmds, commandVariant(variant, project))
 
 			// Tag board
 			if variant.Options.Tags.Sed {
@@ -292,17 +295,19 @@ func commandCopyPcb(pjtname string, variant string) *exec.Cmd {
 	)
 }
 
-func commandVariant(variant Variant, pjtname string) *exec.Cmd {
+func commandVariant(variant Variant, project Project) *exec.Cmd {
 
 	var schematic []string
-	schematic = append(schematic, pjtname, ".sch")
+	schematic = append(schematic, project.Main, ".sch")
 
 	var board []string
-	board = append(board, pjtname, ".kicad_pcb")
+	board = append(board, project.Main, ".kicad_pcb")
 
 	var options []string
-	options = append(options, pjtname)
-	options = append(options, strings.Split(variant.Content, ",")...)
+	options = append(options, project.Main)
+	if len(variant.Content) > 0 {
+		options = append(options, strings.Split(variant.Content, ",")...)
+	}
 
 	fpToRemove := exec.Command(
 		ftr_script,
@@ -320,11 +325,16 @@ func commandVariant(variant Variant, pjtname string) *exec.Cmd {
 	options2 = append(options2, "-u")
 	options2 = append(options2, dlf_script)
 	options2 = append(options2, "--brd")
-	options2 = append(options2, pjtname)
+	options2 = append(options2, project.Main)
 	options2 = append(options2, "--footprints")
 	options2 = append(options2, outStr)
 	options2 = append(options2, "--variant")
 	options2 = append(options2, variant.Name)
+	if variant.Options.Wait > 0 {
+		options2 = append(options2, "--wait_init", strconv.Itoa(variant.Options.Wait))
+	} else if project.Options.Wait > 0 {
+		options2 = append(options2, "--wait_init", strconv.Itoa(project.Options.Wait))
+	}
 
 	return exec.Command(
 		pythonexec,
@@ -550,13 +560,16 @@ func commandGerber(pjtname string, variant string, lyr GerberLayers) *exec.Cmd {
 	}
 }
 
-func commandSchematic(pjtname string) *exec.Cmd {
+func commandSchematic(project Project) *exec.Cmd {
 
+	var options []string
+	options = append(options, "-u", sch_script, project.Main)
+	if project.Options.Wait > 0 {
+		options = append(options, strconv.Itoa(project.Options.Wait))
+	}
 	var c = exec.Command(
 		pythonexec,
-		"-u",
-		sch_script,
-		pjtname,
+		options...,
 	)
 
 	c.Env = os.Environ()

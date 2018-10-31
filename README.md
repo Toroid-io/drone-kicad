@@ -45,6 +45,7 @@ options:
     tag: true | false           # Print tag
     commit: true | false        # Print commit
     date: true | false          # Print date
+  wait: int                     # Delay before variant generation (allows Pcbnew to fully load)
 variants:
  - {options for variant 1}
  - {options for variant 2}
@@ -77,7 +78,11 @@ options:                        # Same as before
     tag: true | false
     commit: true | false
     date: true | false
+  wait: int
 ```
+
+If no `content` is given, all symbols with a non-empty variant field
+will be removed.
 
 ## Plugin options
 
