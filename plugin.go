@@ -185,7 +185,7 @@ func (p Plugin) Exec() error {
 
 		// Export BOM (xml)
 		if project.Options.Bom {
-			cmds = append(cmds, commandBOM(project.Main))
+			cmds = append(cmds, commandBOM(project))
 		}
 
 		// Process each variant
@@ -579,13 +579,16 @@ func commandSchematic(project Project) *exec.Cmd {
 	return c
 }
 
-func commandBOM(pjtname string) *exec.Cmd {
+func commandBOM(project Project) *exec.Cmd {
 
+	var options []string
+	options = append(options, "-u", bom_script, project.Main)
+	if project.Options.Wait > 0 {
+		options = append(options, strconv.Itoa(project.Options.Wait))
+	}
 	var c = exec.Command(
 		pythonexec,
-		"-u",
-		bom_script,
-		pjtname,
+		options...,
 	)
 
 	c.Env = os.Environ()

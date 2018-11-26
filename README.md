@@ -9,6 +9,7 @@ At the moment you can generate:
  - Schematics
  - Gerbers
  - SVGs
+ - XML and CSV BOMs
 
 It can also tag your board with the current commit, tag and date.
 
@@ -25,7 +26,7 @@ These apply to the main PCB:
 main: dir/main_pcb              # Path to main file, no extension
 options:
   sch: true | false             # Generate schematic pdf outptut
-  bom: true | false             # Generate XML BOM
+  bom: true | false             # Generate XML and CSV BOMs
   grb:
     all: true | false           # Generate all gerber outputs
     protel: true | false        # Use protel extensions
@@ -130,6 +131,7 @@ pipeline:
     projects:
       - main: Project1/project_name
         options:
+          bom: true
           pcb: true
           sch: true
           gbr:
@@ -168,6 +170,10 @@ tree:
 │   ├── SCH
 │   │   ├── export_schematic_screencast.ogv
 │   │   └── project_name.pdf
+│   ├── BOM
+│   │   ├── project_name.csv
+│   │   ├── project_name.xml
+│   │   └── export_bom_screencast.ogv
 │   ├── SVG
 │   │   └── project_name.svg
 │   └── PCB
