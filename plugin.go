@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bytes"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -15,13 +14,12 @@ import (
 )
 
 const (
-	pythonexec = "python2"
-	sch_script = "/bin/ci-scripts/export_schematic.py"
+	pythonexec = "python3"
+	sch_script = "kicad-automation.eeschema.schematic"
 	bom_script = "/bin/ci-scripts/export_bom.py"
 	grb_script = "/bin/ci-scripts/export_grb.py"
 	tag_script = "/bin/ci-scripts/tag_board.py"
 	dlf_script = "/bin/ci-scripts/delete_footprints.py"
-	ftr_script = "/bin/ci-scripts/footprints_to_remove.sh"
 	svg_script = "/bin/PcbDraw/pcbdraw.py"
 )
 
@@ -238,6 +236,11 @@ func (p Plugin) Exec() error {
 			cmds = append(cmds, commandTag(p.Commit, project.Main, "", project.Options.Tags))
 		}
 
+		// Export SCH
+		if project.Options.Sch {
+			cmds = append(cmds, commandCopySch(project.Main))
+		}
+
 		// Export PCB
 		if project.Options.Pcb {
 			cmds = append(cmds, commandCopyPcb(project.Main, ""))
@@ -295,50 +298,47 @@ func commandCopyPcb(pjtname string, variant string) *exec.Cmd {
 	)
 }
 
-func commandVariant(variant Variant, project Project) *exec.Cmd {
+func commandCopySch(pjtname string) *exec.Cmd {
 
 	var schematic []string
-	schematic = append(schematic, project.Main, ".sch")
+	schematic = append(schematic, pjtname, ".pdf")
+
+	var folder []string
+	folder = append(folder, "CI-BUILD/", path.Base(pjtname), "/SCH")
+
+	var cmd []string
+	cmd = append(cmd, "mkdir", "-p", strings.Join(folder, ""), "&&", "cp", strings.Join(schematic, ""), strings.Join(folder, ""))
+
+	return exec.Command(
+		"/bin/sh",
+		"-c",
+		strings.Join(cmd, " "),
+	)
+}
+
+func commandVariant(variant Variant, project Project) *exec.Cmd {
 
 	var board []string
 	board = append(board, project.Main, ".kicad_pcb")
 
 	var options []string
+	options = append(options, "-u")
+	options = append(options, dlf_script)
+	options = append(options, "--brd")
 	options = append(options, project.Main)
-	if len(variant.Content) > 0 {
-		options = append(options, strings.Split(variant.Content, ",")...)
-	}
-
-	fpToRemove := exec.Command(
-		ftr_script,
-		options...,
-	)
-	var stdout bytes.Buffer
-	fpToRemove.Stdout = &stdout
-	err := fpToRemove.Run()
-	if err != nil {
-		fmt.Printf("%s", err)
-	}
-	outStr := string(stdout.Bytes())
-
-	var options2 []string
-	options2 = append(options2, "-u")
-	options2 = append(options2, dlf_script)
-	options2 = append(options2, "--brd")
-	options2 = append(options2, project.Main)
-	options2 = append(options2, "--footprints")
-	options2 = append(options2, outStr)
-	options2 = append(options2, "--variant")
-	options2 = append(options2, variant.Name)
+	options = append(options, "--variant-refs")
+	options = append(options, variant.Content)
+	options = append(options, "--variant-name")
+	options = append(options, variant.Name)
 	if variant.Options.Wait > 0 {
-		options2 = append(options2, "--wait_init", strconv.Itoa(variant.Options.Wait))
+		options = append(options, "--wait_init", strconv.Itoa(variant.Options.Wait))
 	} else if project.Options.Wait > 0 {
-		options2 = append(options2, "--wait_init", strconv.Itoa(project.Options.Wait))
+		options = append(options, "--wait_init", strconv.Itoa(project.Options.Wait))
 	}
 
 	return exec.Command(
 		pythonexec,
-		options2...,
+		options...,
 	)
 }
 
@@ -562,19 +562,18 @@ func commandGerber(pjtname string, variant string, lyr GerberLayers) *exec.Cmd {
 
 func commandSchematic(project Project) *exec.Cmd {
 
+	var schematic []string
+	schematic = append(schematic, project.Main, ".sch")
+
+	outdir := path.Dir(strings.Join(schematic, ""))
+
 	var options []string
-	options = append(options, "-u", sch_script, project.Main)
-	if project.Options.Wait > 0 {
-		options = append(options, strconv.Itoa(project.Options.Wait))
-	}
+	options = append(options, "-m", sch_script, "--schematic", strings.Join(schematic, ""), "--output_dir", outdir, "export", "-f", "pdf", "--all_pages")
+
 	var c = exec.Command(
 		pythonexec,
 		options...,
 	)
-
-	c.Env = os.Environ()
-	c.Env = append(c.Env, "DEBIAN_FRONTEND=noninteractive")
-	c.Env = append(c.Env, "DISPLAY=:0")
 
 	return c
 }
